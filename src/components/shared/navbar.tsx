@@ -28,7 +28,7 @@ export function Navbar() {
 
       <div>
         <SignedIn>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </SignedIn>
         <SignedOut>
           <SignInButton mode="modal">
