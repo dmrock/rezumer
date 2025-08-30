@@ -19,7 +19,7 @@ export function Navbar() {
       <div>
         <SignedIn>
           {/* If the user is signed in */}
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </SignedIn>
         <SignedOut>
           {/* If the user is not signed in */}
