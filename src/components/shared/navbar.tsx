@@ -27,6 +27,15 @@ export function Navbar() {
           >
             Dashboard
           </Link>
+          <Link
+            href="/applications"
+            className="text-sm font-medium hover:underline"
+          >
+            Applications
+          </Link>
+          <Link href="/resumes" className="text-sm font-medium hover:underline">
+            Resumes
+          </Link>
         </SignedIn>
       </div>
 
