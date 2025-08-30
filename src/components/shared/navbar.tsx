@@ -8,8 +8,12 @@ import {
   SignUpButton,
 } from "@clerk/nextjs";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Navbar() {
+  const pathname = usePathname();
+  const isSignInPage = pathname === "/sign-in";
+
   return (
     <nav className="flex items-center justify-between px-6 py-4 border-b bg-background">
       <div className="flex items-center gap-6">
@@ -31,11 +35,13 @@ export function Navbar() {
           <UserButton />
         </SignedIn>
         <SignedOut>
-          <SignInButton mode="modal">
-            <button className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
-              Sign in
-            </button>
-          </SignInButton>
+          {!isSignInPage && (
+            <SignInButton mode="modal">
+              <button className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
+                Sign in
+              </button>
+            </SignInButton>
+          )}
         </SignedOut>
       </div>
     </nav>
