@@ -11,7 +11,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-background/90 backdrop-blur-md border-b border-border">
-      {/* Лого */}
+      {/* Logo */}
       <Link
         href="/"
         className="text-xl font-semibold text-foreground hover:opacity-80 transition-opacity"
@@ -19,7 +19,7 @@ export function Header() {
         Rezumer
       </Link>
 
-      {/* Переключатель тем и профиль */}
+      {/* Theme toggle and profile */}
       <div className="flex items-center gap-3">
         <ThemeToggle />
         <SignedIn>
