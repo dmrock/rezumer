@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignInButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/dashboard");
+  }
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Hero Section */}
@@ -22,20 +27,11 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <SignedIn>
-              <Link href="/dashboard">
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            </SignedIn>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
-                  Get Started
-                </Button>
-              </SignInButton>
-            </SignedOut>
+            <SignInButton mode="modal">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
+                Get Started
+              </Button>
+            </SignInButton>
             <Button
               variant="outline"
               className="border-border text-foreground hover:bg-accent px-8 py-3 text-lg font-medium rounded-lg bg-transparent"
@@ -142,13 +138,11 @@ export default function Home() {
             Join thousands of professionals who are already using Rezumer to
             land their dream jobs.
           </p>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
-                Start Building Today
-              </Button>
-            </SignInButton>
-          </SignedOut>
+          <SignInButton mode="modal">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
+              Start Building Today
+            </Button>
+          </SignInButton>
         </div>
       </section>
     </main>
