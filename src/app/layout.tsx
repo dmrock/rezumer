@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/shared/navbar";
+import { Header } from "@/components/shared/header";
+import { Navbar } from "@/components/shared/navigation";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
@@ -32,6 +33,7 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
         >
           <ThemeProvider>
+            <Header />
             <Navbar />
             <main className="min-h-screen">{children}</main>
           </ThemeProvider>
