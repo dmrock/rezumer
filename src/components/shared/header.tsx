@@ -10,38 +10,38 @@ export function Header() {
   const isSignInPage = pathname === "/sign-in";
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-background/90 backdrop-blur-md border-b border-border">
-      {/* Logo */}
-      <Link
-        href="/"
-        className="text-xl font-semibold text-foreground hover:opacity-80 transition-opacity"
-      >
-        Rezumer
-      </Link>
+    <header className="sticky top-0 z-50 w-full bg-white/40 backdrop-blur supports-[backdrop-filter]:bg-white/30 dark:bg-white/5">
+      <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6">
+        {/* Brand text only (no icon) */}
+        <Link href="/" className="text-sm font-medium text-foreground/90">
+          Rezumer
+        </Link>
 
-      {/* Theme toggle and profile */}
-      <div className="flex items-center gap-3">
-        <ThemeToggle />
-        <SignedIn>
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "w-8 h-8",
-                userButtonPopoverCard: "bg-card border border-border shadow-lg",
-                userButtonPopoverFooter: "hidden",
-              },
-            }}
-          />
-        </SignedIn>
-        <SignedOut>
-          {!isSignInPage && (
-            <SignInButton mode="modal">
-              <button className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-colors border border-transparent">
-                Sign in
-              </button>
-            </SignInButton>
-          )}
-        </SignedOut>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+
+          <SignedIn>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-7 w-7",
+                  userButtonPopoverCard:
+                    "bg-popover border border-border/60 shadow-lg",
+                  userButtonPopoverFooter: "hidden",
+                },
+              }}
+            />
+          </SignedIn>
+          <SignedOut>
+            {!isSignInPage && (
+              <SignInButton mode="modal">
+                <button className="inline-flex h-8 items-center justify-center rounded-md border border-border/60 bg-background px-3 text-xs font-medium text-foreground shadow-xs">
+                  Sign in
+                </button>
+              </SignInButton>
+            )}
+          </SignedOut>
+        </div>
       </div>
     </header>
   );
