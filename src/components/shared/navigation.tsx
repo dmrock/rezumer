@@ -30,7 +30,7 @@ export function Navbar() {
                   href={item.href}
                   data-active={active ? "true" : undefined}
                   aria-current={active ? "page" : undefined}
-                  className={`relative inline-flex h-full items-center select-none px-3 no-underline text-sm transition-opacity duration-200 ease-linear cursor-pointer ${
+                  className={`relative inline-flex h-full items-center select-none px-3 no-underline text-md transition-opacity duration-200 ease-linear cursor-pointer ${
                     active ? "opacity-100" : "opacity-60 hover:opacity-100"
                   }`}
                 >
