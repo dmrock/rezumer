@@ -45,9 +45,8 @@ export default async function ResumesPage() {
           description="Create and manage your professional resumes with ease."
           action={
             <Button
-              variant="outline"
               size="lg"
-              className="border-border text-foreground bg-transparent hover:bg-accent/60 hover:border-foreground/20 shadow-xs"
+              className="cursor-pointer border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-xs"
             >
               <svg
                 className="w-5 h-5 mr-2"
