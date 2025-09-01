@@ -1,56 +1,66 @@
 @import "tailwindcss";
 
-:root {
-  --radius: 0.5rem;
-  /* Light theme colors (Vercel style) */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 0%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 0%;
-  --primary: 0 0% 0%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 0 0% 0%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 0 0% 96%;
-  --accent-foreground: 0 0% 0%;
-  --destructive: 0 84% 60%;
-  --border: 0 0% 90%;
-  --input: 0 0% 100%;
-  --ring: 0 0% 0%;
+/* Use class-based dark mode to match next-themes (attribute="class") */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens (Tailwind v4 theme variables) */
+@theme {
+  /* Light theme (Vercel-like) */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(0 0% 0%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 0%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(0 0% 0%);
+  --color-primary: hsl(0 0% 0%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(0 0% 96%);
+  --color-secondary-foreground: hsl(0 0% 0%);
+  --color-muted: hsl(0 0% 96%);
+  --color-muted-foreground: hsl(0 0% 40%);
+  --color-accent: hsl(0 0% 96%);
+  --color-accent-foreground: hsl(0 0% 0%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-border: hsl(0 0% 90%);
+  --color-input: hsl(0 0% 100%);
+  --color-ring: hsl(0 0% 0%);
 }
 
+/* Override tokens for dark mode via regular CSS variables */
 .dark {
-  /* Dark theme colors (Vercel style) */
-  --background: 0 0% 0%;
-  --foreground: 0 0% 100%;
-  --card: 0 0% 4%;
-  --card-foreground: 0 0% 100%;
-  --popover: 0 0% 4%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 0 0% 100%;
-  --primary-foreground: 0 0% 0%;
-  --secondary: 0 0% 10%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 64%;
-  --accent: 0 0% 10%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
-  --border: 0 0% 15%;
-  --input: 0 0% 10%;
-  --ring: 0 0% 100%;
+  --color-background: hsl(0 0% 0%);
+  --color-foreground: hsl(0 0% 100%);
+  --color-card: hsl(0 0% 4%);
+  --color-card-foreground: hsl(0 0% 100%);
+  --color-popover: hsl(0 0% 4%);
+  --color-popover-foreground: hsl(0 0% 100%);
+  --color-primary: hsl(0 0% 100%);
+  --color-primary-foreground: hsl(0 0% 0%);
+  --color-secondary: hsl(0 0% 10%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(0 0% 10%);
+  --color-muted-foreground: hsl(0 0% 64%);
+  --color-accent: hsl(0 0% 10%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-border: hsl(0 0% 15%);
+  --color-input: hsl(0 0% 10%);
+  --color-ring: hsl(0 0% 100%);
+  color-scheme: dark;
+}
+
+/* App-level custom vars not tied to utilities */
+:root {
+  --radius: 0.5rem;
+  color-scheme: light;
 }
 
 * {
-  border-color: hsl(var(--border));
+  border-color: var(--color-border);
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
 }
