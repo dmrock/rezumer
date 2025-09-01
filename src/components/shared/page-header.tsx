@@ -19,7 +19,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
       {/* Full-bleed underline across the viewport, slightly thicker and brighter */}
-      <div className="pointer-events-none absolute left-1/2 bottom-0 h-[1.5px] w-screen -translate-x-1/2 bg-[hsl(var(--border))] opacity-80" />
+      <div className="pointer-events-none absolute left-1/2 bottom-0 h-[1.5px] w-screen -translate-x-1/2 bg-[var(--color-border)] opacity-80" />
     </div>
   );
 }

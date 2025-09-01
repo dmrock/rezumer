@@ -36,7 +36,7 @@ export function Navbar() {
                 >
                   {item.label}
                   {active && (
-                    <span className="pointer-events-none absolute -bottom-px left-3 right-3 h-0.5 bg-[hsl(var(--foreground))]" />
+                    <span className="pointer-events-none absolute -bottom-px left-3 right-3 h-0.5 bg-[var(--color-foreground)]" />
                   )}
                 </Link>
               );
