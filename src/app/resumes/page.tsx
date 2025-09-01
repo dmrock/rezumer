@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/shared/page-header";
 
 export default async function ResumesPage() {
   const { userId } = await auth();
@@ -39,30 +40,32 @@ export default async function ResumesPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Resumes</h1>
-            <p className="text-muted-foreground text-lg">
-              Create and manage your professional resumes with ease.
-            </p>
-          </div>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 border-0">
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <PageHeader
+          title="Resumes"
+          description="Create and manage your professional resumes with ease."
+          action={
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-border text-foreground bg-transparent hover:bg-accent/60 hover:border-foreground/20 shadow-xs"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            Create Resume
-          </Button>
-        </div>
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Create Resume
+            </Button>
+          }
+        />
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
+import { PageHeader } from "@/components/shared/page-header";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -15,12 +16,32 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground text-lg">
-            Welcome back! Here's an overview of your job search progress.
-          </p>
-        </div>
+        <PageHeader
+          title="Dashboard"
+          description="Welcome back! Here's an overview of your job search progress."
+          action={
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-border text-foreground bg-transparent hover:bg-accent/60 hover:border-foreground/20 shadow-xs"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Upgrade to Pro
+            </Button>
+          }
+        />
 
         {/* Quick Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
