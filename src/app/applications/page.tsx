@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
+import { Plus, ClipboardList } from "lucide-react";
 
 export default async function ApplicationsPage() {
   const { userId } = await auth();
@@ -63,19 +64,7 @@ export default async function ApplicationsPage() {
               size="lg"
               className="cursor-pointer border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-xs"
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+              <Plus className="w-5 h-5 mr-2" />
               Add Application
             </Button>
           }
@@ -189,19 +178,7 @@ export default async function ApplicationsPage() {
 
           {applications.length === 0 && (
             <div className="p-12 text-center">
-              <svg
-                className="w-16 h-16 text-muted-foreground mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
+              <ClipboardList className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
                 No applications yet
               </h3>
