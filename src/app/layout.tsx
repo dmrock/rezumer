@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import ConvexClientProvider from "@/components/convex-client-provider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/header";
@@ -28,17 +29,19 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
-        >
-          <ThemeProvider>
-            <Header />
-            <Navbar />
-            <main className="min-h-screen">{children}</main>
-          </ThemeProvider>
-        </body>
-      </html>
+      <ConvexClientProvider>
+        <html lang="en" suppressHydrationWarning>
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
+          >
+            <ThemeProvider>
+              <Header />
+              <Navbar />
+              <main className="min-h-screen">{children}</main>
+            </ThemeProvider>
+          </body>
+        </html>
+      </ConvexClientProvider>
     </ClerkProvider>
   );
 }
