@@ -1,0 +1,23 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  // Users (synced with Clerk)
+  users: defineTable({
+    clerkId: v.string(), // Clerk user ID
+    email: v.string(),
+    name: v.string(),
+    createdAt: v.string(),
+  }).index("by_clerkId", ["clerkId"]),
+
+  // Job stages (each stage = one step in the application process)
+  stages: defineTable({
+    userId: v.id("users"), // Reference to user
+    company: v.string(), // Company name
+    jobTitle: v.string(), // Job title
+    salary: v.number(), // Salary
+    stage: v.string(), // applied | hr_call | tech_interview | offer | rejected
+    date: v.string(), // Date of the stage
+    notes: v.string(), // Optional notes
+  }).index("by_user", ["userId"]),
+});
