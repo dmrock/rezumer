@@ -10,32 +10,31 @@ export default async function Home() {
     redirect("/dashboard");
   }
   return (
-    <main className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <main className="from-background to-muted min-h-screen bg-gradient-to-b">
       {/* Hero Section */}
       <section className="px-6 pt-20 pb-20">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl font-bold text-foreground mb-6 tracking-tight">
+        <div className="mx-auto max-w-6xl text-center">
+          <h1 className="text-foreground mb-6 text-6xl font-bold tracking-tight md:text-7xl">
             Create Your Perfect
-            <span className="bg-gradient-to-r from-primary to-muted-foreground bg-clip-text text-transparent">
+            <span className="from-primary to-muted-foreground bg-gradient-to-r bg-clip-text text-transparent">
               {" "}
               Resume
             </span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-            Build professional resumes that get you hired. Our AI-powered
-            platform helps you create, customize, and optimize your resume for
-            any job application.
+          <p className="text-muted-foreground mx-auto mb-12 max-w-3xl text-xl leading-relaxed">
+            Build professional resumes that get you hired. Our AI-powered platform helps you create,
+            customize, and optimize your resume for any job application.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <SignInButton mode="modal">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg border-0 px-8 py-3 text-lg font-medium">
                 Get Started
               </Button>
             </SignInButton>
             <Button
               variant="outline"
-              className="border-border text-foreground hover:bg-accent px-8 py-3 text-lg font-medium rounded-lg bg-transparent"
+              className="border-border text-foreground hover:bg-accent rounded-lg bg-transparent px-8 py-3 text-lg font-medium"
             >
               Learn More
             </Button>
@@ -44,49 +43,42 @@ export default async function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6 bg-muted/50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center text-foreground mb-16">
+      <section className="bg-muted/50 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="text-foreground mb-16 text-center text-4xl font-bold">
             Everything you need to land your dream job
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-xl border border-border bg-card hover:shadow-lg hover:bg-accent/50 transition-all">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-6">
-                <FileText className="w-6 h-6 text-primary-foreground" />
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="border-border bg-card hover:bg-accent/50 rounded-xl border p-8 transition-all hover:shadow-lg">
+              <div className="bg-primary mb-6 flex h-12 w-12 items-center justify-center rounded-lg">
+                <FileText className="text-primary-foreground h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Resume Builder
-              </h3>
+              <h3 className="text-foreground mb-3 text-xl font-semibold">Resume Builder</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Create stunning, professional resumes with our intuitive
-                drag-and-drop builder. Choose from multiple templates and
-                customize every detail.
+                Create stunning, professional resumes with our intuitive drag-and-drop builder.
+                Choose from multiple templates and customize every detail.
               </p>
             </div>
 
-            <div className="p-8 rounded-xl border border-border bg-card hover:shadow-lg hover:bg-accent/50 transition-all">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-6">
-                <ClipboardList className="w-6 h-6 text-primary-foreground" />
+            <div className="border-border bg-card hover:bg-accent/50 rounded-xl border p-8 transition-all hover:shadow-lg">
+              <div className="bg-primary mb-6 flex h-12 w-12 items-center justify-center rounded-lg">
+                <ClipboardList className="text-primary-foreground h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Application Tracking
-              </h3>
+              <h3 className="text-foreground mb-3 text-xl font-semibold">Application Tracking</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Keep track of all your job applications in one place. Monitor
-                status, set reminders, and never miss a follow-up opportunity.
+                Keep track of all your job applications in one place. Monitor status, set reminders,
+                and never miss a follow-up opportunity.
               </p>
             </div>
 
-            <div className="p-8 rounded-xl border border-border bg-card hover:shadow-lg hover:bg-accent/50 transition-all">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-6">
-                <Zap className="w-6 h-6 text-primary-foreground" />
+            <div className="border-border bg-card hover:bg-accent/50 rounded-xl border p-8 transition-all hover:shadow-lg">
+              <div className="bg-primary mb-6 flex h-12 w-12 items-center justify-center rounded-lg">
+                <Zap className="text-primary-foreground h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Fast & Modern
-              </h3>
+              <h3 className="text-foreground mb-3 text-xl font-semibold">Fast & Modern</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Built with the latest technologies for speed and reliability.
-                Access your resumes and applications from anywhere, anytime.
+                Built with the latest technologies for speed and reliability. Access your resumes
+                and applications from anywhere, anytime.
               </p>
             </div>
           </div>
@@ -94,17 +86,14 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-r from-accent to-muted">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-foreground mb-6">
-            Ready to build your future?
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of professionals who are already using Rezumer to
-            land their dream jobs.
+      <section className="from-accent to-muted bg-gradient-to-r px-6 py-20">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-foreground mb-6 text-4xl font-bold">Ready to build your future?</h2>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-xl">
+            Join thousands of professionals who are already using Rezumer to land their dream jobs.
           </p>
           <SignInButton mode="modal">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg font-medium rounded-lg border-0">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg border-0 px-8 py-3 text-lg font-medium">
               Start Building Today
             </Button>
           </SignInButton>

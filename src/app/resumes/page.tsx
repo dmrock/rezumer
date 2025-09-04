@@ -38,8 +38,8 @@ export default async function ResumesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="from-background to-muted min-h-screen bg-gradient-to-b p-6">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <PageHeader
           title="Resumes"
@@ -47,36 +47,28 @@ export default async function ResumesPage() {
           action={
             <Button
               size="lg"
-              className="cursor-pointer border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-xs"
+              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer shadow-xs"
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="mr-2 h-5 w-5" />
               Create Resume
             </Button>
           }
         />
 
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 border border-border bg-card">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Total Resumes
-            </h3>
-            <p className="text-3xl font-bold text-foreground">
-              {resumes.length}
-            </p>
+        <div className="mb-8 grid gap-6 md:grid-cols-3">
+          <Card className="border-border bg-card border p-6">
+            <h3 className="text-muted-foreground mb-2 text-sm font-medium">Total Resumes</h3>
+            <p className="text-foreground text-3xl font-bold">{resumes.length}</p>
           </Card>
-          <Card className="p-6 border border-border bg-card">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              Complete
-            </h3>
+          <Card className="border-border bg-card border p-6">
+            <h3 className="text-muted-foreground mb-2 text-sm font-medium">Complete</h3>
             <p className="text-3xl font-bold text-green-600 dark:text-green-400">
               {resumes.filter((resume) => resume.status === "Complete").length}
             </p>
           </Card>
-          <Card className="p-6 border border-border bg-card">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
-              In Progress
-            </h3>
+          <Card className="border-border bg-card border p-6">
+            <h3 className="text-muted-foreground mb-2 text-sm font-medium">In Progress</h3>
             <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
               {resumes.filter((resume) => resume.status === "Draft").length}
             </p>
@@ -85,75 +77,60 @@ export default async function ResumesPage() {
 
         {/* Templates Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-foreground mb-6">
-            Choose a Template
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              "Modern",
-              "Professional",
-              "Clean",
-              "Creative",
-              "Minimal",
-              "Executive",
-            ].map((template) => (
-              <Card
-                key={template}
-                className="p-6 border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
-              >
-                <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/80 rounded-lg mb-4 flex items-center justify-center group-hover:from-primary group-hover:to-primary/80 transition-all">
-                  <FileText className="w-12 h-12 text-muted-foreground group-hover:text-primary-foreground transition-colors" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  {template}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Professional template perfect for {template.toLowerCase()}{" "}
-                  industries
-                </p>
-                <Button
-                  variant="outline"
-                  className="w-full border-border text-foreground hover:bg-accent group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary bg-transparent transition-all"
+          <h2 className="text-foreground mb-6 text-2xl font-semibold">Choose a Template</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            {["Modern", "Professional", "Clean", "Creative", "Minimal", "Executive"].map(
+              (template) => (
+                <Card
+                  key={template}
+                  className="border-border bg-card hover:bg-accent/50 group cursor-pointer border p-6 transition-colors"
                 >
-                  Use Template
-                </Button>
-              </Card>
-            ))}
+                  <div className="from-muted to-muted/80 group-hover:from-primary group-hover:to-primary/80 mb-4 flex aspect-[3/4] items-center justify-center rounded-lg bg-gradient-to-br transition-all">
+                    <FileText className="text-muted-foreground group-hover:text-primary-foreground h-12 w-12 transition-colors" />
+                  </div>
+                  <h3 className="text-foreground mb-2 text-lg font-semibold">{template}</h3>
+                  <p className="text-muted-foreground mb-4 text-sm">
+                    Professional template perfect for {template.toLowerCase()} industries
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="border-border text-foreground hover:bg-accent group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary w-full bg-transparent transition-all"
+                  >
+                    Use Template
+                  </Button>
+                </Card>
+              ),
+            )}
           </div>
         </div>
 
         {/* Resumes List */}
-        <Card className="border border-border bg-card">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-2xl font-semibold text-foreground">
-              Your Resumes
-            </h2>
+        <Card className="border-border bg-card border">
+          <div className="border-border border-b p-6">
+            <h2 className="text-foreground text-2xl font-semibold">Your Resumes</h2>
           </div>
 
           {resumes.length > 0 ? (
-            <div className="divide-y divide-border">
+            <div className="divide-border divide-y">
               {resumes.map((resume) => (
-                <div
-                  key={resume.id}
-                  className="p-6 hover:bg-accent/50 transition-colors"
-                >
+                <div key={resume.id} className="hover:bg-accent/50 p-6 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-16 bg-muted rounded border-2 border-border flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-muted-foreground" />
+                      <div className="bg-muted border-border flex h-16 w-12 items-center justify-center rounded border-2">
+                        <FileText className="text-muted-foreground h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-foreground mb-1">
+                        <h3 className="text-foreground mb-1 text-xl font-semibold">
                           {resume.name}
                         </h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="text-muted-foreground flex items-center gap-4 text-sm">
                           <span>Template: {resume.template}</span>
                           <span>Modified: {resume.lastModified}</span>
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
+                            className={`rounded px-2 py-1 text-xs font-medium ${
                               resume.status === "Complete"
-                                ? "bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400"
-                                : "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-400"
+                                ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400"
+                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400"
                             }`}
                           >
                             {resume.status}
@@ -191,10 +168,8 @@ export default async function ResumesPage() {
             </div>
           ) : (
             <div className="p-12 text-center">
-              <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                No resumes yet
-              </h3>
+              <FileText className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+              <h3 className="text-foreground mb-2 text-lg font-medium">No resumes yet</h3>
               <p className="text-muted-foreground mb-4">
                 Create your first resume to get started with your job search.
               </p>

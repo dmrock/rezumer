@@ -23,8 +23,8 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="from-background to-muted min-h-screen bg-gradient-to-b p-6">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <PageHeader
           title="Dashboard"
@@ -32,112 +32,96 @@ export default function DashboardClient() {
           action={
             <Button
               size="lg"
-              className="cursor-pointer border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-xs"
+              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer shadow-xs"
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="mr-2 h-5 w-5" />
               Upgrade to Pro
             </Button>
           }
         />
 
         {/* Quick Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6 border border-border bg-card hover:shadow-md hover:bg-accent/50 transition-all">
+        <div className="mb-8 grid gap-6 md:grid-cols-4">
+          <Card className="border-border bg-card hover:bg-accent/50 border p-6 transition-all hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Resumes
-                </p>
-                <p className="text-3xl font-bold text-foreground">3</p>
+                <p className="text-muted-foreground text-sm font-medium">Total Resumes</p>
+                <p className="text-foreground text-3xl font-bold">3</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-full flex items-center justify-center">
-                <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card hover:shadow-md hover:bg-accent/50 transition-all">
+          <Card className="border-border bg-card hover:bg-accent/50 border p-6 transition-all hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Applications
-                </p>
-                <p className="text-3xl font-bold text-foreground">12</p>
+                <p className="text-muted-foreground text-sm font-medium">Applications</p>
+                <p className="text-foreground text-3xl font-bold">12</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center">
-                <ClipboardList className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/20">
+                <ClipboardList className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card hover:shadow-md hover:bg-accent/50 transition-all">
+          <Card className="border-border bg-card hover:bg-accent/50 border p-6 transition-all hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Interviews
-                </p>
-                <p className="text-3xl font-bold text-foreground">4</p>
+                <p className="text-muted-foreground text-sm font-medium">Interviews</p>
+                <p className="text-foreground text-3xl font-bold">4</p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/20 rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
+                <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card hover:shadow-md hover:bg-accent/50 transition-all">
+          <Card className="border-border bg-card hover:bg-accent/50 border p-6 transition-all hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Response Rate
-                </p>
-                <p className="text-3xl font-bold text-foreground">33%</p>
+                <p className="text-muted-foreground text-sm font-medium">Response Rate</p>
+                <p className="text-foreground text-3xl font-bold">33%</p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-500/20 rounded-full flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20">
+                <BarChart3 className="h-6 w-6 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          <Card className="p-8 border border-border bg-card">
-            <h3 className="text-2xl font-semibold text-foreground mb-4">
-              Quick Actions
-            </h3>
+        <div className="mb-8 grid gap-8 md:grid-cols-2">
+          <Card className="border-border bg-card border p-8">
+            <h3 className="text-foreground mb-4 text-2xl font-semibold">Quick Actions</h3>
             <div className="space-y-4">
               <Link href="/applications">
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border-0 justify-start">
-                  <Plus className="w-5 h-5 mr-3" />
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start border-0">
+                  <Plus className="mr-3 h-5 w-5" />
                   Add Job Application
                 </Button>
               </Link>
             </div>
           </Card>
 
-          <Card className="p-8 border border-border bg-card">
-            <h3 className="text-2xl font-semibold text-foreground mb-4">
-              Recent Activity
-            </h3>
+          <Card className="border-border bg-card border p-8">
+            <h3 className="text-foreground mb-4 text-2xl font-semibold">Recent Activity</h3>
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400"></div>
                 <div>
-                  <p className="font-medium text-foreground">
-                    Application submitted
-                  </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-foreground font-medium">Application submitted</p>
+                  <p className="text-muted-foreground text-sm">
                     Google - Software Engineer - 1 day ago
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="w-2 h-2 bg-purple-500 dark:bg-purple-400 rounded-full"></div>
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></div>
                 <div>
-                  <p className="font-medium text-foreground">
-                    Interview scheduled
-                  </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-foreground font-medium">Interview scheduled</p>
+                  <p className="text-muted-foreground text-sm">
                     Microsoft - Technical Interview - 3 days ago
                   </p>
                 </div>
