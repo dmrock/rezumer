@@ -1,0 +1,8 @@
+.clerk
+.next
+convex/_generated
+node_modules
+out
+build
+dist
+coverage

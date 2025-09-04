@@ -13,13 +13,16 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     ignores: [
-      "node_modules/**",
+      ".clerk/**",
       ".next/**",
+      "convex/_generated/**",
+      "node_modules/**",
       "out/**",
       "build/**",
       "next-env.d.ts",
     ],
   },
+  ...compat.extends("prettier"),
 ];
 
 export default eslintConfig;
