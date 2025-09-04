@@ -74,3 +74,55 @@ export const createApplication = mutation({
     return id;
   },
 });
+
+export const updateApplication = mutation({
+  args: {
+    id: v.id("applications"),
+    company: v.optional(v.string()),
+    jobTitle: v.optional(v.string()),
+    salary: v.optional(v.number()),
+    stage: v.optional(v.string()),
+    date: v.optional(v.string()),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const app = await ctx.db.get(args.id);
+    if (!app) throw new Error("Application not found");
+
+    // Ensure the current user owns this application
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+    if (!user || app.userId !== user._id) throw new Error("Forbidden");
+
+    if (args.stage && !STAGES.includes(args.stage as Stage)) {
+      throw new Error("Invalid stage value");
+    }
+
+    const { id, ...patch } = args;
+    await ctx.db.patch(id, patch);
+  },
+});
+
+export const deleteApplication = mutation({
+  args: { id: v.id("applications") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const app = await ctx.db.get(args.id);
+    if (!app) throw new Error("Application not found");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+    if (!user || app.userId !== user._id) throw new Error("Forbidden");
+
+    await ctx.db.delete(args.id);
+  },
+});
