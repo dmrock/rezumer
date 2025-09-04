@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 export function ApplicationsClient() {
@@ -25,10 +32,24 @@ export function ApplicationsClient() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<Id<"applications"> | null>(null);
   const [editDraft, setEditDraft] = useState<Record<string, any>>({});
 
   const STAGES = ["applied", "hr_call", "tech_interview", "offer", "rejected"] as const;
+
+  // Listen to header button to open the modal
+  React.useEffect(() => {
+    const handler = () => setOpen(true);
+    if (typeof window !== "undefined") {
+      window.addEventListener("open-add-application", handler);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("open-add-application", handler);
+      }
+    };
+  }, []);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +64,7 @@ export function ApplicationsClient() {
         notes: form.notes,
       });
       setForm({ company: "", jobTitle: "", salary: "", stage: "applied", date: today, notes: "" });
+      setOpen(false);
     } finally {
       setSubmitting(false);
     }
@@ -86,77 +108,87 @@ export function ApplicationsClient() {
 
   return (
     <div className="space-y-6">
-      {/* Add form */}
-      <Card className="border-border bg-card border p-6">
-        <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-6">
-          <div className="md:col-span-2">
-            <label className="text-muted-foreground mb-1 block text-sm">Company</label>
-            <Input
-              value={form.company}
-              onChange={(e) => setForm((s) => ({ ...s, company: e.target.value }))}
-              placeholder="Company name"
-              required
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="text-muted-foreground mb-1 block text-sm">Job Title</label>
-            <Input
-              value={form.jobTitle}
-              onChange={(e) => setForm((s) => ({ ...s, jobTitle: e.target.value }))}
-              placeholder="e.g. Software Engineer"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-muted-foreground mb-1 block text-sm">Salary</label>
-            <Input
-              type="number"
-              min={0}
-              value={form.salary}
-              onChange={(e) => setForm((s) => ({ ...s, salary: e.target.value }))}
-              placeholder="150000"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-muted-foreground mb-1 block text-sm">Stage</label>
-            <select
-              className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              value={form.stage}
-              onChange={(e) => setForm((s) => ({ ...s, stage: e.target.value }))}
-            >
-              {STAGES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-muted-foreground mb-1 block text-sm">Date</label>
-            <Input
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm((s) => ({ ...s, date: e.target.value }))}
-              required
-            />
-          </div>
-          <div className="md:col-span-5">
-            <label className="text-muted-foreground mb-1 block text-sm">Notes</label>
-            <textarea
-              className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground min-h-24 w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-              value={form.notes}
-              onChange={(e) => setForm((s) => ({ ...s, notes: e.target.value }))}
-              placeholder="Any context or links"
-            />
-          </div>
-          <div className="flex items-end md:col-span-1">
-            <Button type="submit" disabled={submitting} className="w-full">
-              {submitting ? "Adding..." : "Add"}
-            </Button>
-          </div>
-        </form>
-      </Card>
+      {/* Add application modal - opened from header button */}
+      <div className="flex justify-end">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add application</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-6">
+              <div className="md:col-span-3">
+                <label className="text-muted-foreground mb-1 block text-sm">Company</label>
+                <Input
+                  value={form.company}
+                  onChange={(e) => setForm((s) => ({ ...s, company: e.target.value }))}
+                  placeholder="Company name"
+                  required
+                />
+              </div>
+              <div className="md:col-span-3">
+                <label className="text-muted-foreground mb-1 block text-sm">Job Title</label>
+                <Input
+                  value={form.jobTitle}
+                  onChange={(e) => setForm((s) => ({ ...s, jobTitle: e.target.value }))}
+                  placeholder="e.g. Software Engineer"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-muted-foreground mb-1 block text-sm">Salary</label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.salary}
+                  onChange={(e) => setForm((s) => ({ ...s, salary: e.target.value }))}
+                  placeholder="150000"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-muted-foreground mb-1 block text-sm">Stage</label>
+                <select
+                  className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  value={form.stage}
+                  onChange={(e) => setForm((s) => ({ ...s, stage: e.target.value }))}
+                >
+                  {STAGES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-muted-foreground mb-1 block text-sm">Date</label>
+                <Input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm((s) => ({ ...s, date: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="md:col-span-6">
+                <label className="text-muted-foreground mb-1 block text-sm">Notes</label>
+                <textarea
+                  className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground min-h-24 w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                  value={form.notes}
+                  onChange={(e) => setForm((s) => ({ ...s, notes: e.target.value }))}
+                  placeholder="Any context or links"
+                />
+              </div>
+              <DialogFooter className="md:col-span-6">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Adding..." : "Add"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Table */}
       <Card className="border-border bg-card border p-0">
@@ -207,6 +239,7 @@ export function ApplicationsClient() {
                           min={0}
                           value={editDraft.salary}
                           onChange={(e) => setEditDraft((s) => ({ ...s, salary: e.target.value }))}
+                          className="min-w-[8rem]"
                         />
                       ) : (
                         `$ ${Number(a.salary).toLocaleString()}`
@@ -215,7 +248,7 @@ export function ApplicationsClient() {
                     <td className="p-3 align-top">
                       {isEditing ? (
                         <select
-                          className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
+                          className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full min-w-[10rem] rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
                           value={editDraft.stage}
                           onChange={(e) => setEditDraft((s) => ({ ...s, stage: e.target.value }))}
                         >
@@ -235,6 +268,7 @@ export function ApplicationsClient() {
                           type="date"
                           value={editDraft.date}
                           onChange={(e) => setEditDraft((s) => ({ ...s, date: e.target.value }))}
+                          className="min-w-[10rem]"
                         />
                       ) : (
                         a.date
@@ -280,7 +314,7 @@ export function ApplicationsClient() {
               {applications.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-muted-foreground p-8 text-center">
-                    No applications yet. Add your first one above.
+                    No applications yet. Use the “Add application” button above.
                   </td>
                 </tr>
               )}

@@ -1,10 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
-import { Plus } from "lucide-react";
 import { ApplicationsClient } from "./applications-client";
+import { AddApplicationHeaderButton } from "./add-application-header-button";
 
 export default async function ApplicationsPage() {
   const { userId } = await auth();
@@ -22,15 +20,7 @@ export default async function ApplicationsPage() {
         <PageHeader
           title="Applications"
           description="Track and manage all your job applications in one place."
-          action={
-            <Button
-              size="lg"
-              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer shadow-xs"
-            >
-              <Plus className="mr-2 h-5 w-5" />
-              Add Application
-            </Button>
-          }
+          action={<AddApplicationHeaderButton />}
         />
 
         {/* Stats and list use client components */}
