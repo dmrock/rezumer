@@ -10,8 +10,8 @@ export default defineSchema({
     createdAt: v.string(),
   }).index("by_clerkId", ["clerkId"]),
 
-  // Job stages (each stage = one step in the application process)
-  stages: defineTable({
+  // Job applications (each document = one application record)
+  applications: defineTable({
     userId: v.id("users"), // Reference to user
     company: v.string(), // Company name
     jobTitle: v.string(), // Job title
