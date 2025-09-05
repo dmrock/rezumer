@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { ApplicationsClient } from "./applications-client";
 import { AddApplicationHeaderButton } from "./add-application-header-button";
+import { ApplicationsStats } from "./applications-stats";
 
 export default async function ApplicationsPage() {
   const { userId } = await auth();
@@ -16,15 +17,13 @@ export default async function ApplicationsPage() {
   return (
     <div className="from-background to-muted min-h-screen bg-gradient-to-b p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <PageHeader
           title="Applications"
           description="Track and manage all your job applications in one place."
           action={<AddApplicationHeaderButton />}
         />
 
-        {/* Stats and list use client components */}
-        <div className="mb-8"></div>
+        <ApplicationsStats />
 
         <ApplicationsClient />
       </div>
