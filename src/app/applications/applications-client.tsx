@@ -18,6 +18,35 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 const STAGES = ["applied", "hr_call", "tech_interview", "offer", "rejected"] as const;
 type Stage = (typeof STAGES)[number];
+const STAGE_META: Record<Stage, { label: string; className: string }> = {
+  applied: {
+    label: "Applied",
+    className:
+      "border-gray-300 bg-gray-100 text-gray-800 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-300",
+  },
+  hr_call: {
+    label: "HR Call",
+    className:
+      "border-blue-300 bg-blue-100 text-blue-800 dark:border-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  tech_interview: {
+    label: "Tech",
+    className:
+      "border-violet-300 bg-violet-100 text-violet-800 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  },
+  offer: {
+    label: "Offer",
+    className:
+      "border-green-300 bg-green-100 text-green-800 dark:border-green-700 dark:bg-green-900/40 dark:text-green-300",
+  },
+  rejected: {
+    label: "Rejected",
+    className:
+      "border-red-300 bg-red-100 text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400",
+  },
+};
+const BADGE_BASE =
+  "inline-flex items-center rounded border px-2 py-0.5 text-sm font-medium whitespace-nowrap";
 type ApplicationEditable = {
   company: string;
   jobTitle: string;
@@ -172,7 +201,7 @@ export function ApplicationsClient() {
                 >
                   {STAGES.map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {STAGE_META[s].label}
                     </option>
                   ))}
                 </select>
@@ -274,12 +303,16 @@ export function ApplicationsClient() {
                         >
                           {STAGES.map((s) => (
                             <option key={s} value={s}>
-                              {s}
+                              {STAGE_META[s].label}
                             </option>
                           ))}
                         </select>
                       ) : (
-                        a.stage
+                        <span
+                          className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
+                        >
+                          {STAGE_META[(a.stage as Stage) || "applied"].label}
+                        </span>
                       )}
                     </td>
                     <td className="align-center p-2">
