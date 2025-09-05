@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -210,7 +211,7 @@ export function ApplicationsClient() {
                 const isEditing = editingId === a._id;
                 return (
                   <tr key={a._id} className="hover:bg-accent/50">
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       {isEditing ? (
                         <Input
                           value={editDraft.company}
@@ -220,7 +221,7 @@ export function ApplicationsClient() {
                         a.company
                       )}
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       {isEditing ? (
                         <Input
                           value={editDraft.jobTitle}
@@ -232,7 +233,7 @@ export function ApplicationsClient() {
                         a.jobTitle
                       )}
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       {isEditing ? (
                         <Input
                           type="number"
@@ -245,7 +246,7 @@ export function ApplicationsClient() {
                         `$ ${Number(a.salary).toLocaleString()}`
                       )}
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       {isEditing ? (
                         <select
                           className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full min-w-[10rem] rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
@@ -262,7 +263,7 @@ export function ApplicationsClient() {
                         a.stage
                       )}
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       {isEditing ? (
                         <Input
                           type="date"
@@ -274,7 +275,7 @@ export function ApplicationsClient() {
                         a.date
                       )}
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       {isEditing ? (
                         <textarea
                           className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
@@ -285,7 +286,7 @@ export function ApplicationsClient() {
                         <span className="line-clamp-2 max-w-[28rem] break-words">{a.notes}</span>
                       )}
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="align-center p-2">
                       <div className="flex justify-end gap-2">
                         {isEditing ? (
                           <>
@@ -298,11 +299,25 @@ export function ApplicationsClient() {
                           </>
                         ) : (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => startEdit(a._id)}>
-                              Edit
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => startEdit(a._id)}
+                              aria-label="Edit"
+                              title="Edit"
+                              className="hover:cursor-pointer"
+                            >
+                              <Pencil className="size-4" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => remove(a._id)}>
-                              Delete
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => remove(a._id)}
+                              aria-label="Delete"
+                              title="Delete"
+                              className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
+                            >
+                              <Trash2 className="size-4" />
                             </Button>
                           </>
                         )}
