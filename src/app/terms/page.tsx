@@ -8,10 +8,7 @@ export default function TermsPage() {
   return (
     <div className="from-background to-muted bg-gradient-to-b p-6">
       <div className="mx-auto max-w-5xl">
-        <PageHeader
-          title="Terms of Use"
-          description={`Last updated: ${new Date().toLocaleDateString()}`}
-        />
+        <PageHeader title="Terms of Use" description={"Last updated: September 5, 2025"} />
 
         <div className="text-foreground/90 max-w-none space-y-4 leading-relaxed md:space-y-5">
           <p className="m-0">
