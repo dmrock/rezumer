@@ -11,7 +11,7 @@ export default function CodeOfConductPage() {
         <PageHeader title="Code of Conduct" description="Our expectations for using Rezumer" />
 
         <div className="text-foreground/90 max-w-none space-y-4 leading-relaxed md:space-y-5">
-          <p className="m-0">
+          <p className="m-0 mb-4">
             We are committed to providing a respectful and inclusive experience for everyone using
             Rezumer.
           </p>

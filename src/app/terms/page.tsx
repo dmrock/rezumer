@@ -11,7 +11,7 @@ export default function TermsPage() {
         <PageHeader title="Terms of Use" description={"Last updated: September 5, 2025"} />
 
         <div className="text-foreground/90 max-w-none space-y-4 leading-relaxed md:space-y-5">
-          <p className="m-0">
+          <p className="m-0 mb-4">
             Welcome to Rezumer. By accessing or using our website and services, you agree to these
             Terms of Use. If you do not agree, please do not use Rezumer.
           </p>
