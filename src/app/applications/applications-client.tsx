@@ -315,7 +315,7 @@ export function ApplicationsClient() {
                               onClick={() => remove(a._id)}
                               aria-label="Delete"
                               title="Delete"
-                              className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
+                              className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
                             >
                               <Trash2 className="size-4" />
                             </Button>
