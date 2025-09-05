@@ -38,7 +38,9 @@ export default function RootLayout({
             <ThemeProvider>
               <Header />
               <Navbar />
-              <main className="min-h-0 flex-1">{children}</main>
+              <main className="from-background to-muted min-h-0 flex-1 bg-gradient-to-b">
+                {children}
+              </main>
               <Footer />
             </ThemeProvider>
           </body>

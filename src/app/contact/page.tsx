@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="from-background to-muted bg-gradient-to-b p-6">
+    <div className="p-6">
       <div className="mx-auto max-w-5xl">
         <PageHeader title="Contact" description="We'd love to hear from you" />
 

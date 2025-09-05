@@ -23,7 +23,7 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="from-background to-muted bg-gradient-to-b p-6">
+    <div className="p-6">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <PageHeader

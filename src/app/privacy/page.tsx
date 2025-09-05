@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shared/page-header";
 
 export default function PrivacyPage() {
   return (
-    <div className="from-background to-muted bg-gradient-to-b p-6">
+    <div className="p-6">
       <div className="mx-auto max-w-5xl">
         <PageHeader title="Privacy Policy" description={"Last updated: September 5, 2025"} />
 
