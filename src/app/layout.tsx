@@ -4,7 +4,7 @@ import ConvexClientProvider from "@/components/convex-client-provider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/header";
-import { Navbar } from "@/components/shared/navigation";
+import { Navbar } from "@/components/shared/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
