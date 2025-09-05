@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,7 +46,7 @@ const STAGE_META: Record<Stage, { label: string; className: string }> = {
   },
 };
 const BADGE_BASE =
-  "inline-flex items-center rounded border px-2 py-0.5 text-sm font-medium whitespace-nowrap";
+  "inline-flex h-7 items-center rounded border px-2 text-sm font-medium whitespace-nowrap";
 type ApplicationEditable = {
   company: string;
   jobTitle: string;
@@ -84,6 +84,8 @@ export function ApplicationsClient() {
     notes: "",
   };
   const [editDraft, setEditDraft] = useState<ApplicationEditable>(emptyDraft);
+  const [savingStage, setSavingStage] = useState<Id<"applications"> | null>(null);
+  const [stageMenuFor, setStageMenuFor] = useState<Id<"applications"> | null>(null);
 
   // Listen to header button to open the modal
   React.useEffect(() => {
@@ -95,6 +97,17 @@ export function ApplicationsClient() {
       if (typeof window !== "undefined") {
         window.removeEventListener("open-add-application", handler);
       }
+    };
+  }, []);
+
+  // Close stage dropdown on Escape
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setStageMenuFor(null);
+    };
+    if (typeof window !== "undefined") window.addEventListener("keydown", onKey);
+    return () => {
+      if (typeof window !== "undefined") window.removeEventListener("keydown", onKey);
     };
   }, []);
 
@@ -147,6 +160,16 @@ export function ApplicationsClient() {
       notes: editDraft.notes,
     });
     cancelEdit();
+  }
+
+  // Inline change for Stage column
+  async function changeStage(id: Id<"applications">, stage: Stage) {
+    try {
+      setSavingStage(id);
+      await updateApplication({ id, stage });
+    } finally {
+      setSavingStage(null);
+    }
   }
 
   async function remove(id: Id<"applications">) {
@@ -308,11 +331,53 @@ export function ApplicationsClient() {
                           ))}
                         </select>
                       ) : (
-                        <span
-                          className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
-                        >
-                          {STAGE_META[(a.stage as Stage) || "applied"].label}
-                        </span>
+                        <div className="relative flex items-center gap-2">
+                          <span
+                            className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
+                          >
+                            {STAGE_META[(a.stage as Stage) || "applied"].label}
+                          </span>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7"
+                            aria-label="Change stage"
+                            title="Change stage"
+                            aria-expanded={stageMenuFor === a._id}
+                            disabled={savingStage === a._id}
+                            onClick={() => setStageMenuFor((cur) => (cur === a._id ? null : a._id))}
+                          >
+                            <ChevronDown className="size-4" />
+                          </Button>
+                          {stageMenuFor === a._id && (
+                            <>
+                              {/* overlay to close on outside click */}
+                              <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setStageMenuFor(null)}
+                              />
+                              <div
+                                className="border-border bg-popover text-popover-foreground absolute top-full right-0 z-50 mt-2 w-44 rounded-md border p-1 shadow-md"
+                                role="menu"
+                              >
+                                {STAGES.map((s) => (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    className="hover:bg-accent hover:text-accent-foreground w-full rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
+                                    disabled={savingStage === a._id || s === (a.stage as Stage)}
+                                    onClick={async () => {
+                                      await changeStage(a._id, s as Stage);
+                                      setStageMenuFor(null);
+                                    }}
+                                  >
+                                    {STAGE_META[s].label}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="align-center p-2">
