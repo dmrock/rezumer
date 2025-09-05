@@ -1,4 +1,4 @@
-export default {
+const config = {
   providers: [
     {
       domain: process.env.CLERK_FRONTEND_API_URL,
@@ -6,3 +6,5 @@ export default {
     },
   ],
 };
+
+export default config;

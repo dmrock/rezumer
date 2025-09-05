@@ -10,7 +10,7 @@ export default async function Home() {
     redirect("/dashboard");
   }
   return (
-    <main className="from-background to-muted min-h-screen bg-gradient-to-b">
+    <div className="from-background to-muted bg-gradient-to-b">
       {/* Hero Section */}
       <section className="px-6 pt-20 pb-20">
         <div className="mx-auto max-w-6xl text-center">
@@ -99,6 +99,6 @@ export default async function Home() {
           </SignInButton>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

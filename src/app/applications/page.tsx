@@ -15,7 +15,7 @@ export default async function ApplicationsPage() {
   // Stats placeholders for now; list is live via client component below
 
   return (
-    <div className="from-background to-muted min-h-screen bg-gradient-to-b p-6">
+    <div className="from-background to-muted bg-gradient-to-b p-6">
       <div className="mx-auto max-w-7xl">
         <PageHeader
           title="Applications"

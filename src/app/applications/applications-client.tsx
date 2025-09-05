@@ -16,6 +16,17 @@ import {
 } from "@/components/ui/dialog";
 import type { Id } from "../../../convex/_generated/dataModel";
 
+const STAGES = ["applied", "hr_call", "tech_interview", "offer", "rejected"] as const;
+type Stage = (typeof STAGES)[number];
+type ApplicationEditable = {
+  company: string;
+  jobTitle: string;
+  salary: string; // keep as string while editing
+  stage: Stage;
+  date: string;
+  notes: string;
+};
+
 export function ApplicationsClient() {
   const applications = useQuery(api.applications.listApplications) ?? [];
   const createApplication = useMutation(api.applications.createApplication);
@@ -35,9 +46,15 @@ export function ApplicationsClient() {
   const [submitting, setSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<Id<"applications"> | null>(null);
-  const [editDraft, setEditDraft] = useState<Record<string, any>>({});
-
-  const STAGES = ["applied", "hr_call", "tech_interview", "offer", "rejected"] as const;
+  const emptyDraft: ApplicationEditable = {
+    company: "",
+    jobTitle: "",
+    salary: "",
+    stage: "applied",
+    date: today,
+    notes: "",
+  };
+  const [editDraft, setEditDraft] = useState<ApplicationEditable>(emptyDraft);
 
   // Listen to header button to open the modal
   React.useEffect(() => {
@@ -79,7 +96,7 @@ export function ApplicationsClient() {
       company: a.company,
       jobTitle: a.jobTitle,
       salary: String(a.salary),
-      stage: a.stage,
+      stage: a.stage as Stage,
       date: a.date,
       notes: a.notes,
     });
@@ -87,7 +104,7 @@ export function ApplicationsClient() {
 
   function cancelEdit() {
     setEditingId(null);
-    setEditDraft({});
+    setEditDraft(emptyDraft);
   }
 
   async function saveEdit(id: Id<"applications">) {
@@ -251,7 +268,9 @@ export function ApplicationsClient() {
                         <select
                           className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full min-w-[10rem] rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
                           value={editDraft.stage}
-                          onChange={(e) => setEditDraft((s) => ({ ...s, stage: e.target.value }))}
+                          onChange={(e) =>
+                            setEditDraft((s) => ({ ...s, stage: e.target.value as Stage }))
+                          }
                         >
                           {STAGES.map((s) => (
                             <option key={s} value={s}>
