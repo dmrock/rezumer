@@ -10,7 +10,7 @@ export function Header() {
   const isSignInPage = pathname?.startsWith("/sign-in");
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/40 backdrop-blur supports-[backdrop-filter]:bg-white/30 dark:bg-white/5">
+    <header className="bg-background sticky top-0 z-50 w-full dark:bg-neutral-950">
       <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="text-foreground/90 px-1 text-lg font-medium">
           Rezumer

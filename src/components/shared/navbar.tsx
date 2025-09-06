@@ -11,7 +11,7 @@ export function Navbar() {
 
   return (
     <SignedIn>
-      <nav className="border-border/60 sticky top-14 z-40 border-b bg-white/40 backdrop-blur supports-[backdrop-filter]:bg-white/30 dark:bg-white/5">
+      <nav className="border-border/60 bg-background sticky top-14 z-40 border-b dark:bg-neutral-950">
         <div className="mx-auto flex h-[46px] max-w-screen-2xl items-center justify-start px-2 md:px-4">
           <div ref={listRef} className="relative flex h-full items-center gap-0">
             {[
