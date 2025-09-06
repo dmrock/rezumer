@@ -21,7 +21,7 @@ export default async function ResumesPage() {
           action={
             <Button
               size="lg"
-              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer shadow-xs"
+              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-not-allowed shadow-xs"
             >
               <Plus className="mr-2 h-5 w-5" />
               Create Resume

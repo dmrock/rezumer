@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
-import { Plus, FileText, ClipboardList, Users, BarChart3 } from "lucide-react";
+import { Plus, FileText, ClipboardList, Users, BarChart3, Wrench } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -32,7 +32,7 @@ export default function DashboardClient() {
           action={
             <Button
               size="lg"
-              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-pointer shadow-xs"
+              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground cursor-not-allowed shadow-xs"
             >
               <Plus className="mr-2 h-5 w-5" />
               Upgrade to Pro
@@ -46,7 +46,7 @@ export default function DashboardClient() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm font-medium">Total Resumes</p>
-                <p className="text-foreground text-3xl font-bold">3</p>
+                <p className="text-foreground text-3xl font-bold">0</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -91,43 +91,17 @@ export default function DashboardClient() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8 grid gap-8 md:grid-cols-2">
-          <Card className="border-border bg-card border p-8">
-            <h3 className="text-foreground mb-4 text-2xl font-semibold">Quick Actions</h3>
-            <div className="space-y-4">
-              <Link href="/applications">
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start border-0">
-                  <Plus className="mr-3 h-5 w-5" />
-                  Add Job Application
-                </Button>
-              </Link>
-            </div>
-          </Card>
-
-          <Card className="border-border bg-card border p-8">
-            <h3 className="text-foreground mb-4 text-2xl font-semibold">Recent Activity</h3>
-            <div className="space-y-4">
-              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400"></div>
-                <div>
-                  <p className="text-foreground font-medium">Application submitted</p>
-                  <p className="text-muted-foreground text-sm">
-                    Google - Software Engineer - 1 day ago
-                  </p>
-                </div>
-              </div>
-              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></div>
-                <div>
-                  <p className="text-foreground font-medium">Interview scheduled</p>
-                  <p className="text-muted-foreground text-sm">
-                    Microsoft - Technical Interview - 3 days ago
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
+        {/* Under construction message */}
+        <div className="flex items-center justify-center" style={{ height: "calc(100vh - 500px)" }}>
+          <div className="just w-full max-w-xl rounded-md p-8 text-center">
+            <Wrench className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+            <p className="text-foreground mb-1 text-base font-medium md:text-lg">
+              This feature is under development.
+            </p>
+            <p className="text-muted-foreground text-sm md:text-base">
+              I'm working on it and will ship it soon.
+            </p>
+          </div>
         </div>
       </div>
     </div>
