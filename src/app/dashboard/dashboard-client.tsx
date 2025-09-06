@@ -1,26 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
 import { Plus, FileText, ClipboardList, Users, BarChart3, Wrench } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 export default function DashboardClient() {
   const { user } = useUser();
   const createUser = useMutation(api.users.createUser);
+  const applications = useQuery(api.applications.listApplications) ?? [];
+  const totalApplications = applications.length;
 
   // Sync Clerk user to Convex
-  if (user) {
+  useEffect(() => {
+    if (!user) return;
     createUser({
       clerkId: user.id,
       email: user.primaryEmailAddress?.emailAddress || "",
       name: user.fullName || "",
     });
-  }
+  }, [user?.id, user?.primaryEmailAddress?.emailAddress, user?.fullName, createUser]);
 
   return (
     <div className="p-6">
@@ -58,7 +61,7 @@ export default function DashboardClient() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm font-medium">Applications</p>
-                <p className="text-foreground text-3xl font-bold">12</p>
+                <p className="text-foreground text-3xl font-bold">{totalApplications}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/20">
                 <ClipboardList className="h-6 w-6 text-green-600 dark:text-green-400" />
