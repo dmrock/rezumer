@@ -6,6 +6,7 @@
     "dev": "next dev",
     "convex:dev": "convex dev",
     "convex:dashboard": "convex dashboard",
+    "convex:deploy": "convex deploy",
     "build": "next build",
     "start": "next start",
     "format": "prettier --write .",
