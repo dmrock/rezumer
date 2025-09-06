@@ -312,7 +312,7 @@ export function ApplicationsClient() {
                           className="min-w-[8rem]"
                         />
                       ) : (
-                        `$ ${Number(a.salary).toLocaleString()}`
+                        `${Number(a.salary).toLocaleString()}`
                       )}
                     </td>
                     <td className="align-center p-2">
