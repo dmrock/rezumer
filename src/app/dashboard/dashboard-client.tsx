@@ -14,6 +14,10 @@ export default function DashboardClient() {
   const createUser = useMutation(api.users.createUser);
   const applications = useQuery(api.applications.listApplications) ?? [];
   const totalApplications = applications.length;
+  const appliedCount = applications.filter((a) => a.stage === "applied").length;
+  const interviewsCount = totalApplications - appliedCount;
+  const responseRate =
+    totalApplications > 0 ? Math.round((interviewsCount / totalApplications) * 100) : 0;
 
   // Sync Clerk user to Convex
   useEffect(() => {
@@ -73,7 +77,7 @@ export default function DashboardClient() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm font-medium">Interviews</p>
-                <p className="text-foreground text-3xl font-bold">4</p>
+                <p className="text-foreground text-3xl font-bold">{interviewsCount}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
                 <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -85,7 +89,7 @@ export default function DashboardClient() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm font-medium">Response Rate</p>
-                <p className="text-foreground text-3xl font-bold">33%</p>
+                <p className="text-foreground text-3xl font-bold">{responseRate}%</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20">
                 <BarChart3 className="h-6 w-6 text-orange-600 dark:text-orange-400" />
