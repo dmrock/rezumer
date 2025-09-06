@@ -40,7 +40,7 @@ export function Header() {
           <SignedOut>
             {!isSignInPage && (
               <SignInButton mode="modal">
-                <button className="border-border/60 bg-background text-foreground inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium shadow-xs">
+                <button className="border-border/60 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 cursor-pointer items-center justify-center rounded-md border px-3 text-sm font-medium shadow-xs">
                   Sign in
                 </button>
               </SignInButton>
