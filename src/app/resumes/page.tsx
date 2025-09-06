@@ -37,7 +37,7 @@ export default async function ResumesPage() {
               This feature is under development.
             </p>
             <p className="text-muted-foreground text-sm md:text-base">
-              I'm working on it and will ship it soon.
+              I&apos;m working on it and will ship it soon.
             </p>
           </div>
         </div>

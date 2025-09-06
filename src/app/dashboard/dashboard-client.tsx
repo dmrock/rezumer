@@ -23,7 +23,7 @@ export default function DashboardClient() {
       email: user.primaryEmailAddress?.emailAddress || "",
       name: user.fullName || "",
     });
-  }, [user?.id, user?.primaryEmailAddress?.emailAddress, user?.fullName, createUser]);
+  }, [user, createUser]);
 
   return (
     <div className="p-6">
@@ -102,7 +102,7 @@ export default function DashboardClient() {
               This feature is under development.
             </p>
             <p className="text-muted-foreground text-sm md:text-base">
-              I'm working on it and will ship it soon.
+              I&apos;m working on it and will ship it soon.
             </p>
           </div>
         </div>

@@ -19,8 +19,8 @@ export default async function Home() {
           expected.
         </p>
         <p className="text-muted-foreground mb-10 text-lg">
-          Today, you can track your interview progress across applications. Soon, you'll be able to
-          create clean, single-page resumes tailored to each role.
+          Today, you can track your interview progress across applications. Soon, you&apos;ll be
+          able to create clean, single-page resumes tailored to each role.
         </p>
         <Button
           asChild
