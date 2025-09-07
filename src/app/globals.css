@@ -66,3 +66,16 @@ body {
     "rlig" 1,
     "calt" 1;
 }
+
+/* Hide number input spinners (keep type=number) */
+/* Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Firefox + standard */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}

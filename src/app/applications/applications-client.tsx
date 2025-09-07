@@ -205,7 +205,7 @@ export function ApplicationsClient() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="text-muted-foreground mb-1 block text-sm">Salary</label>
+                <label className="text-muted-foreground mb-1 block text-sm">Annual Salary</label>
                 <Input
                   type="number"
                   min={0}
@@ -268,7 +268,7 @@ export function ApplicationsClient() {
               <tr>
                 <th className="p-3">Company</th>
                 <th className="p-3">Job Title</th>
-                <th className="p-3">Salary</th>
+                <th className="p-3">Annual Salary</th>
                 <th className="p-3">Stage</th>
                 <th className="p-3">Date</th>
                 <th className="p-3">Notes</th>
