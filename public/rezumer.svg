@@ -1,0 +1,21 @@
+<svg width="200" height="200" viewBox="0 0 200 200"
+     xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="90" fill="black" />
+  <path d="M70 65 
+           Q70 55 80 55 
+           L110 55 
+           Q140 55 140 85 
+           Q140 115 110 115 
+           L90 115 
+           L90 145 
+           Q90 155 80 155 
+           Q70 155 70 145 Z
+           M90 70 L110 70 
+           Q120 70 120 85 
+           Q120 100 110 100 
+           L90 100 Z"
+        fill="white" />
+  <line x1="110" y1="135" x2="125" y2="150"
+        stroke="white" stroke-width="20"
+        stroke-linecap="round" />
+</svg>
