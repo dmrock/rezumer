@@ -9,7 +9,7 @@ export default function ContactPage() {
   return (
     <div className="p-6">
       <div className="mx-auto max-w-5xl">
-        <PageHeader title="Contact" description="We'd love to hear from you" />
+        <PageHeader title="Contact" description="I'd love to hear from you" />
 
         <div className="border-border/60 bg-card text-card-foreground rounded-lg border p-6 shadow-sm">
           <p>
