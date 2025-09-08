@@ -104,6 +104,12 @@ export function ApplicationsClient() {
   const [editDraft, setEditDraft] = useState<ApplicationEditable>(emptyDraft);
   const [savingStage, setSavingStage] = useState<Id<"applications"> | null>(null);
   const [stageMenuFor, setStageMenuFor] = useState<Id<"applications"> | null>(null);
+  const [stageMenuPos, setStageMenuPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
 
   // Listen to header button to open the modal
   React.useEffect(() => {
@@ -128,6 +134,22 @@ export function ApplicationsClient() {
       if (typeof window !== "undefined") window.removeEventListener("keydown", onKey);
     };
   }, []);
+
+  // Close dropdown on scroll/resize to avoid misalignment
+  React.useEffect(() => {
+    if (!stageMenuFor) return;
+    const close = () => setStageMenuFor(null);
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", close, true);
+      window.addEventListener("resize", close);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", close, true);
+        window.removeEventListener("resize", close);
+      }
+    };
+  }, [stageMenuFor]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -363,7 +385,41 @@ export function ApplicationsClient() {
                             title="Change stage"
                             aria-expanded={stageMenuFor === a._id}
                             disabled={savingStage === a._id}
-                            onClick={() => setStageMenuFor((cur) => (cur === a._id ? null : a._id))}
+                            onClick={(e) => {
+                              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                              const menuWidth = 176; // w-44
+                              const gap = 8; // space between button and menu
+                              const vw = window.innerWidth;
+                              const left = Math.min(
+                                Math.max(8, rect.right - menuWidth),
+                                vw - menuWidth - 8,
+                              );
+                              // estimate menu height based on items
+                              const itemH = 36; // ~h per item (text-sm + padding)
+                              const chrome = 8; // container padding/border
+                              const estimatedHeight = itemH * STAGES.length + chrome;
+                              const vh = window.innerHeight;
+                              const spaceBelow = vh - rect.bottom - gap;
+                              const spaceAbove = rect.top - gap;
+                              const placeAbove = spaceBelow < Math.min(estimatedHeight, spaceAbove);
+                              const maxHeight = Math.max(
+                                120,
+                                Math.min(
+                                  estimatedHeight,
+                                  placeAbove ? spaceAbove - 8 : spaceBelow - 8,
+                                ),
+                              );
+                              const top = placeAbove ? undefined : rect.bottom + gap;
+                              const bottom = placeAbove
+                                ? Math.max(8, window.innerHeight - rect.top + gap)
+                                : undefined;
+                              setStageMenuFor((cur) => {
+                                const next = cur === a._id ? null : a._id;
+                                if (next) setStageMenuPos({ top, bottom, left, maxHeight });
+                                else setStageMenuPos(null);
+                                return next;
+                              });
+                            }}
                           >
                             <ChevronDown className="size-4" />
                           </Button>
@@ -371,12 +427,18 @@ export function ApplicationsClient() {
                             <>
                               {/* overlay to close on outside click */}
                               <div
-                                className="fixed inset-0 z-40"
+                                className="fixed inset-0 z-[999]"
                                 onClick={() => setStageMenuFor(null)}
                               />
                               <div
-                                className="border-border bg-popover text-popover-foreground absolute top-full right-0 z-50 mt-2 w-44 rounded-md border p-1 shadow-md"
+                                className="border-border bg-popover text-popover-foreground fixed z-[1000] w-44 overflow-auto rounded-md border p-1 shadow-md"
                                 role="menu"
+                                style={{
+                                  top: stageMenuPos?.top,
+                                  bottom: stageMenuPos?.bottom,
+                                  left: stageMenuPos?.left ?? 0,
+                                  maxHeight: stageMenuPos?.maxHeight ?? 240,
+                                }}
                               >
                                 {STAGES.map((s) => (
                                   <button
