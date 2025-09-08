@@ -92,16 +92,7 @@ export function ApplicationsClient() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState<Id<"applications"> | null>(null);
-  const emptyDraft: ApplicationEditable = {
-    company: "",
-    jobTitle: "",
-    salary: "",
-    stage: "applied",
-    date: today,
-    notes: "",
-  };
-  const [editDraft, setEditDraft] = useState<ApplicationEditable>(emptyDraft);
+  const [editingAppId, setEditingAppId] = useState<Id<"applications"> | null>(null);
   const [savingStage, setSavingStage] = useState<Id<"applications"> | null>(null);
   const [stageMenuFor, setStageMenuFor] = useState<Id<"applications"> | null>(null);
   const [stageMenuPos, setStageMenuPos] = useState<{
@@ -113,7 +104,12 @@ export function ApplicationsClient() {
 
   // Listen to header button to open the modal
   React.useEffect(() => {
-    const handler = () => setOpen(true);
+    const handler = () => {
+      // open in create mode
+      setEditingAppId(null);
+      setForm({ company: "", jobTitle: "", salary: "", stage: "applied", date: today, notes: "" });
+      setOpen(true);
+    };
     if (typeof window !== "undefined") {
       window.addEventListener("open-add-application", handler);
     }
@@ -151,18 +147,32 @@ export function ApplicationsClient() {
     };
   }, [stageMenuFor]);
 
-  async function handleAdd(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await createApplication({
-        company: form.company.trim(),
-        jobTitle: form.jobTitle.trim(),
-        salary: Number(form.salary) || 0,
-        stage: form.stage,
-        date: form.date,
-        notes: form.notes,
-      });
+      if (editingAppId) {
+        await updateApplication({
+          id: editingAppId,
+          company: form.company.trim(),
+          jobTitle: form.jobTitle.trim(),
+          salary: Number(form.salary) || 0,
+          stage: form.stage,
+          date: form.date,
+          notes: form.notes,
+        });
+      } else {
+        await createApplication({
+          company: form.company.trim(),
+          jobTitle: form.jobTitle.trim(),
+          salary: Number(form.salary) || 0,
+          stage: form.stage,
+          date: form.date,
+          notes: form.notes,
+        });
+      }
+      // reset after submit
+      setEditingAppId(null);
       setForm({ company: "", jobTitle: "", salary: "", stage: "applied", date: today, notes: "" });
       setOpen(false);
     } finally {
@@ -170,36 +180,19 @@ export function ApplicationsClient() {
     }
   }
 
-  function startEdit(id: Id<"applications">) {
+  function openEditModal(id: Id<"applications">) {
     const a = applications.find((x) => x._id === id);
     if (!a) return;
-    setEditingId(id);
-    setEditDraft({
+    setEditingAppId(id);
+    setForm({
       company: a.company,
       jobTitle: a.jobTitle,
       salary: String(a.salary),
-      stage: a.stage as Stage,
+      stage: (a.stage as Stage) ?? "applied",
       date: a.date,
       notes: a.notes,
     });
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditDraft(emptyDraft);
-  }
-
-  async function saveEdit(id: Id<"applications">) {
-    await updateApplication({
-      id,
-      company: editDraft.company,
-      jobTitle: editDraft.jobTitle,
-      salary: Number(editDraft.salary) || 0,
-      stage: editDraft.stage,
-      date: editDraft.date,
-      notes: editDraft.notes,
-    });
-    cancelEdit();
+    setOpen(true);
   }
 
   // Inline change for Stage column
@@ -220,12 +213,29 @@ export function ApplicationsClient() {
     <div className="space-y-6">
       {/* Add application modal - opened from header button */}
       <div className="flex justify-end">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) {
+              // closing — reset state
+              setEditingAppId(null);
+              setForm({
+                company: "",
+                jobTitle: "",
+                salary: "",
+                stage: "applied",
+                date: today,
+                notes: "",
+              });
+            }
+          }}
+        >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add application</DialogTitle>
+              <DialogTitle>{editingAppId ? "Edit application" : "Add application"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-6">
+            <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-6">
               <div className="md:col-span-3">
                 <label className="text-muted-foreground mb-1 block text-sm">Company</label>
                 <Input
@@ -292,7 +302,13 @@ export function ApplicationsClient() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add"}
+                  {submitting
+                    ? editingAppId
+                      ? "Saving..."
+                      : "Adding..."
+                    : editingAppId
+                      ? "Save"
+                      : "Add"}
                 </Button>
               </DialogFooter>
             </form>
@@ -317,207 +333,132 @@ export function ApplicationsClient() {
             </thead>
             <tbody className="divide-border divide-y">
               {applications.map((a) => {
-                const isEditing = editingId === a._id;
                 return (
                   <tr key={a._id} className="hover:bg-accent/50">
+                    <td className="align-center p-2">{a.company}</td>
+                    <td className="align-center p-2">{a.jobTitle}</td>
+                    <td className="align-center p-2">{`${Number(a.salary).toLocaleString()}`}</td>
                     <td className="align-center p-2">
-                      {isEditing ? (
-                        <Input
-                          value={editDraft.company}
-                          onChange={(e) => setEditDraft((s) => ({ ...s, company: e.target.value }))}
-                        />
-                      ) : (
-                        a.company
-                      )}
-                    </td>
-                    <td className="align-center p-2">
-                      {isEditing ? (
-                        <Input
-                          value={editDraft.jobTitle}
-                          onChange={(e) =>
-                            setEditDraft((s) => ({ ...s, jobTitle: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        a.jobTitle
-                      )}
-                    </td>
-                    <td className="align-center p-2">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          min={0}
-                          value={editDraft.salary}
-                          onChange={(e) => setEditDraft((s) => ({ ...s, salary: e.target.value }))}
-                          className="min-w-[8rem]"
-                        />
-                      ) : (
-                        `${Number(a.salary).toLocaleString()}`
-                      )}
-                    </td>
-                    <td className="align-center p-2">
-                      {isEditing ? (
-                        <select
-                          className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full min-w-[10rem] rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
-                          value={editDraft.stage}
-                          onChange={(e) =>
-                            setEditDraft((s) => ({ ...s, stage: e.target.value as Stage }))
-                          }
+                      <div className="relative flex items-center gap-2">
+                        <span
+                          className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
                         >
-                          {STAGES.map((s) => (
-                            <option key={s} value={s}>
-                              {STAGE_META[s].label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="relative flex items-center gap-2">
-                          <span
-                            className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
-                          >
-                            {STAGE_META[(a.stage as Stage) || "applied"].label}
-                          </span>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7"
-                            aria-label="Change stage"
-                            title="Change stage"
-                            aria-expanded={stageMenuFor === a._id}
-                            disabled={savingStage === a._id}
-                            onClick={(e) => {
-                              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                              const menuWidth = 176; // w-44
-                              const gap = 8; // space between button and menu
-                              const vw = window.innerWidth;
-                              const left = Math.min(
-                                Math.max(8, rect.right - menuWidth),
-                                vw - menuWidth - 8,
-                              );
-                              // estimate menu height based on items
-                              const itemH = 36; // ~h per item (text-sm + padding)
-                              const chrome = 8; // container padding/border
-                              const estimatedHeight = itemH * STAGES.length + chrome;
-                              const vh = window.innerHeight;
-                              const spaceBelow = vh - rect.bottom - gap;
-                              const spaceAbove = rect.top - gap;
-                              const placeAbove = spaceBelow < Math.min(estimatedHeight, spaceAbove);
-                              const maxHeight = Math.max(
-                                120,
-                                Math.min(
-                                  estimatedHeight,
-                                  placeAbove ? spaceAbove - 8 : spaceBelow - 8,
-                                ),
-                              );
-                              const top = placeAbove ? undefined : rect.bottom + gap;
-                              const bottom = placeAbove
-                                ? Math.max(8, window.innerHeight - rect.top + gap)
-                                : undefined;
-                              setStageMenuFor((cur) => {
-                                const next = cur === a._id ? null : a._id;
-                                if (next) setStageMenuPos({ top, bottom, left, maxHeight });
-                                else setStageMenuPos(null);
-                                return next;
-                              });
-                            }}
-                          >
-                            <ChevronDown className="size-4" />
-                          </Button>
-                          {stageMenuFor === a._id && (
-                            <>
-                              {/* overlay to close on outside click */}
-                              <div
-                                className="fixed inset-0 z-[999]"
-                                onClick={() => setStageMenuFor(null)}
-                              />
-                              <div
-                                className="border-border bg-popover text-popover-foreground fixed z-[1000] w-44 overflow-auto rounded-md border p-1 shadow-md"
-                                role="menu"
-                                style={{
-                                  top: stageMenuPos?.top,
-                                  bottom: stageMenuPos?.bottom,
-                                  left: stageMenuPos?.left ?? 0,
-                                  maxHeight: stageMenuPos?.maxHeight ?? 240,
-                                }}
-                              >
-                                {STAGES.map((s) => (
-                                  <button
-                                    key={s}
-                                    type="button"
-                                    className="hover:bg-accent hover:text-accent-foreground w-full rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
-                                    disabled={savingStage === a._id || s === (a.stage as Stage)}
-                                    onClick={async () => {
-                                      await changeStage(a._id, s as Stage);
-                                      setStageMenuFor(null);
-                                    }}
-                                  >
-                                    {STAGE_META[s].label}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
+                          {STAGE_META[(a.stage as Stage) || "applied"].label}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-7 w-7"
+                          aria-label="Change stage"
+                          title="Change stage"
+                          aria-expanded={stageMenuFor === a._id}
+                          disabled={savingStage !== null}
+                          onClick={(e) => {
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                            const menuWidth = 176; // w-44
+                            const gap = 8; // space between button and menu
+                            const vw = window.innerWidth;
+                            const left = Math.min(
+                              Math.max(8, rect.right - menuWidth),
+                              vw - menuWidth - 8,
+                            );
+                            // estimate menu height based on items
+                            const itemH = 36; // ~h per item (text-sm + padding)
+                            const chrome = 8; // container padding/border
+                            const estimatedHeight = itemH * STAGES.length + chrome;
+                            const vh = window.innerHeight;
+                            const spaceBelow = vh - rect.bottom - gap;
+                            const spaceAbove = rect.top - gap;
+                            const placeAbove = spaceBelow < Math.min(estimatedHeight, spaceAbove);
+                            const maxHeight = Math.max(
+                              120,
+                              Math.min(
+                                estimatedHeight,
+                                placeAbove ? spaceAbove - 8 : spaceBelow - 8,
+                              ),
+                            );
+                            const top = placeAbove ? undefined : rect.bottom + gap;
+                            const bottom = placeAbove
+                              ? Math.max(8, window.innerHeight - rect.top + gap)
+                              : undefined;
+                            setStageMenuFor((cur) => {
+                              const next = cur === a._id ? null : a._id;
+                              if (next) setStageMenuPos({ top, bottom, left, maxHeight });
+                              else setStageMenuPos(null);
+                              return next;
+                            });
+                          }}
+                        >
+                          <ChevronDown className="size-4" />
+                        </Button>
+                        {stageMenuFor === a._id && (
+                          <>
+                            {/* overlay to close on outside click */}
+                            <div
+                              className="fixed inset-0 z-[999]"
+                              onClick={() => setStageMenuFor(null)}
+                            />
+                            <div
+                              className="border-border bg-popover text-popover-foreground fixed z-[1000] w-44 overflow-auto rounded-md border p-1 shadow-md"
+                              role="menu"
+                              style={{
+                                top: stageMenuPos?.top,
+                                bottom: stageMenuPos?.bottom,
+                                left: stageMenuPos?.left ?? 0,
+                                maxHeight: stageMenuPos?.maxHeight ?? 240,
+                              }}
+                            >
+                              {STAGES.map((s) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  className="hover:bg-accent hover:text-accent-foreground w-full rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
+                                  disabled={savingStage !== null || s === (a.stage as Stage)}
+                                  onClick={async () => {
+                                    await changeStage(a._id, s as Stage);
+                                    setStageMenuFor(null);
+                                  }}
+                                >
+                                  {STAGE_META[s].label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </td>
+                    <td className="align-center p-2">{a.date}</td>
                     <td className="align-center p-2">
-                      {isEditing ? (
-                        <Input
-                          type="date"
-                          value={editDraft.date}
-                          onChange={(e) => setEditDraft((s) => ({ ...s, date: e.target.value }))}
-                          className="min-w-[10rem]"
-                        />
-                      ) : (
-                        a.date
-                      )}
-                    </td>
-                    <td className="align-center p-2">
-                      {isEditing ? (
-                        <textarea
-                          className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
-                          value={editDraft.notes}
-                          onChange={(e) => setEditDraft((s) => ({ ...s, notes: e.target.value }))}
-                        />
-                      ) : (
-                        <span className="line-clamp-2 max-w-[28rem] break-words">{a.notes}</span>
-                      )}
+                      <span className="line-clamp-2 max-w-[28rem] break-words">{a.notes}</span>
                     </td>
                     <td className="align-center p-2">
                       <div className="flex justify-end gap-2">
-                        {isEditing ? (
-                          <>
-                            <Button size="sm" onClick={() => saveEdit(a._id)}>
-                              Save
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={cancelEdit}>
-                              Cancel
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => startEdit(a._id)}
-                              aria-label="Edit"
-                              title="Edit"
-                              className="hover:cursor-pointer"
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => remove(a._id)}
-                              aria-label="Delete"
-                              title="Delete"
-                              className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </>
-                        )}
+                        <>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => openEditModal(a._id)}
+                            aria-label="Edit"
+                            title="Edit"
+                            className="hover:cursor-pointer"
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => {
+                              if (confirm(`Delete application for ${a.company}?`)) {
+                                remove(a._id);
+                              }
+                            }}
+                            aria-label="Delete"
+                            title="Delete"
+                            className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </>
                       </div>
                     </td>
                   </tr>

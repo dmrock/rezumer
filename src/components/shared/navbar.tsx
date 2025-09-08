@@ -15,7 +15,7 @@ export function Navbar() {
         <div className="mx-auto flex h-[46px] max-w-screen-2xl items-center justify-start px-2 md:px-4">
           <div ref={listRef} className="relative flex h-full items-center gap-0">
             {[
-              { href: "/dashboard", label: "Overview" },
+              { href: "/dashboard", label: "Dashboard" },
               { href: "/applications", label: "Applications" },
               { href: "/resumes", label: "Resumes" },
             ].map((item) => {
