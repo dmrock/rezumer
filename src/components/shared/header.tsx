@@ -1,6 +1,7 @@
 "use client";
 
 import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -12,8 +13,16 @@ export function Header() {
   return (
     <header className="bg-background sticky top-0 z-50 w-full dark:bg-neutral-950">
       <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="text-foreground/90 px-1 text-lg font-medium">
-          Rezumer
+        <Link href="/" className="text-foreground/90 flex items-center gap-2 text-lg font-medium">
+          <Image
+            src="/rezumer.svg"
+            alt="Rezumer logo"
+            width={32}
+            height={32}
+            priority
+            className="h-8 w-8"
+          />
+          <span>Rezumer</span>
         </Link>
 
         <div className="flex items-center gap-3 sm:gap-4">
