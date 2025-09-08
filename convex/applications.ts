@@ -38,7 +38,7 @@ export const createApplication = mutation({
   args: {
     company: v.string(),
     jobTitle: v.string(),
-    salary: v.number(),
+    salary: v.optional(v.number()),
     stage: v.string(), // validate against STAGES at runtime
     date: v.string(),
     notes: v.string(),
@@ -73,7 +73,8 @@ export const createApplication = mutation({
       userId: user!._id,
       company: args.company,
       jobTitle: args.jobTitle,
-      salary: args.salary,
+      // Only include salary if provided
+      ...(args.salary !== undefined ? { salary: args.salary } : {}),
       stage: args.stage,
       date: args.date,
       notes: args.notes,
@@ -89,6 +90,7 @@ export const updateApplication = mutation({
     company: v.optional(v.string()),
     jobTitle: v.optional(v.string()),
     salary: v.optional(v.number()),
+    clearSalary: v.optional(v.boolean()),
     stage: v.optional(v.string()),
     date: v.optional(v.string()),
     notes: v.optional(v.string()),
@@ -111,7 +113,12 @@ export const updateApplication = mutation({
       throw new Error("Invalid stage value");
     }
 
-    const { id, ...patch } = args;
+    const { id, clearSalary, ...rest } = args as typeof args & { [k: string]: any };
+    const patch: Record<string, any> = { ...rest };
+    if (clearSalary) {
+      // Remove the salary field from the document
+      patch.salary = undefined;
+    }
     await ctx.db.patch(id, patch);
   },
 });

@@ -15,7 +15,7 @@ export default defineSchema({
     userId: v.id("users"), // Reference to user
     company: v.string(), // Company name
     jobTitle: v.string(), // Job title
-    salary: v.number(), // Salary
+    salary: v.optional(v.number()), // Salary (optional)
     stage: v.string(), // applied | hr_call | tech_interview | offer | rejected | ghosted | rejected_no_interview
     date: v.string(), // Date of the stage
     notes: v.string(), // Optional notes

@@ -101,6 +101,7 @@ export function ApplicationsClient() {
     left: number;
     maxHeight: number;
   } | null>(null);
+  const [errors, setErrors] = useState<{ salary?: string }>({});
 
   // Listen to header button to open the modal
   React.useEffect(() => {
@@ -151,25 +152,38 @@ export function ApplicationsClient() {
     e.preventDefault();
     try {
       setSubmitting(true);
-      if (editingAppId) {
-        await updateApplication({
-          id: editingAppId,
-          company: form.company.trim(),
-          jobTitle: form.jobTitle.trim(),
-          salary: Number(form.salary) || 0,
-          stage: form.stage,
-          date: form.date,
-          notes: form.notes,
-        });
+      // Validate salary if provided
+      const salaryStr = form.salary.trim();
+      let parsedSalary: number | undefined = undefined;
+      if (salaryStr !== "") {
+        const n = Number(salaryStr);
+        if (!Number.isFinite(n) || n < 0) {
+          setErrors((prev) => ({ ...prev, salary: "Enter a valid non-negative number" }));
+          return;
+        }
+        parsedSalary = n;
       } else {
-        await createApplication({
-          company: form.company.trim(),
-          jobTitle: form.jobTitle.trim(),
-          salary: Number(form.salary) || 0,
-          stage: form.stage,
-          date: form.date,
-          notes: form.notes,
-        });
+        // clear previous errors when user emptied the field
+        if (errors.salary) setErrors((prev) => ({ ...prev, salary: undefined }));
+      }
+      const base = {
+        company: form.company.trim(),
+        jobTitle: form.jobTitle.trim(),
+        stage: form.stage,
+        date: form.date,
+        notes: form.notes,
+      };
+      const salaryPatch =
+        parsedSalary !== undefined
+          ? { salary: parsedSalary }
+          : // when editing and user cleared the field, send clear flag
+            editingAppId
+            ? { clearSalary: true }
+            : {};
+      if (editingAppId) {
+        await updateApplication({ id: editingAppId, ...base, ...salaryPatch });
+      } else {
+        await createApplication({ ...base, ...salaryPatch });
       }
       // reset after submit
       setEditingAppId(null);
@@ -187,7 +201,7 @@ export function ApplicationsClient() {
     setForm({
       company: a.company,
       jobTitle: a.jobTitle,
-      salary: String(a.salary),
+      salary: a.salary != null ? String(a.salary) : "",
       stage: (a.stage as Stage) ?? "applied",
       date: a.date,
       notes: a.notes,
@@ -259,11 +273,17 @@ export function ApplicationsClient() {
                 <Input
                   type="number"
                   min={0}
+                  step={1}
+                  inputMode="numeric"
                   value={form.salary}
-                  onChange={(e) => setForm((s) => ({ ...s, salary: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setForm((s) => ({ ...s, salary: val }));
+                    if (errors.salary) setErrors((prev) => ({ ...prev, salary: undefined }));
+                  }}
                   placeholder="150000"
-                  required
                 />
+                {errors.salary && <p className="mt-1 text-sm text-red-600">{errors.salary}</p>}
               </div>
               <div className="md:col-span-2">
                 <label className="text-muted-foreground mb-1 block text-sm">Stage</label>
@@ -337,7 +357,9 @@ export function ApplicationsClient() {
                   <tr key={a._id} className="hover:bg-accent/50">
                     <td className="align-center p-2">{a.company}</td>
                     <td className="align-center p-2">{a.jobTitle}</td>
-                    <td className="align-center p-2">{`${Number(a.salary).toLocaleString()}`}</td>
+                    <td className="align-center p-2">
+                      {a.salary != null ? `${Number(a.salary).toLocaleString()}` : "—"}
+                    </td>
                     <td className="align-center p-2">
                       <div className="relative flex items-center gap-2">
                         <span
