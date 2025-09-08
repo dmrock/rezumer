@@ -5,7 +5,14 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card } from "@/components/ui/card";
 
-type Stage = "applied" | "hr_call" | "tech_interview" | "offer" | "rejected";
+type Stage =
+  | "applied"
+  | "hr_call"
+  | "tech_interview"
+  | "offer"
+  | "rejected"
+  | "ghosted"
+  | "rejected_no_interview";
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: "applied", label: "Total" },
@@ -13,6 +20,8 @@ const STAGES: { key: Stage; label: string }[] = [
   { key: "tech_interview", label: "Tech" },
   { key: "offer", label: "Offer" },
   { key: "rejected", label: "Rejected" },
+  { key: "ghosted", label: "Ghosted" },
+  { key: "rejected_no_interview", label: "No Interview" },
 ];
 
 function isSameMonth(dateStr: string, ref: Date) {
@@ -49,7 +58,7 @@ export function ApplicationsStats() {
 
   return (
     <div className="mb-3">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-5 lg:grid-cols-7">
         {STAGES.map((s) => {
           // For the first block (Applied) show total submissions
           const isApplied = s.key === "applied";

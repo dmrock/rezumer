@@ -1,7 +1,15 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-const STAGES = ["applied", "hr_call", "tech_interview", "offer", "rejected"] as const;
+const STAGES = [
+  "applied",
+  "hr_call",
+  "tech_interview",
+  "offer",
+  "rejected",
+  "ghosted",
+  "rejected_no_interview",
+] as const;
 type Stage = (typeof STAGES)[number];
 
 export const listApplications = query({
