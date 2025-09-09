@@ -18,12 +18,12 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 const STAGES = [
   "applied",
+  "cv_rejected",
   "hr_call",
   "tech_interview",
   "offer",
   "rejected",
   "ghosted",
-  "rejected_no_interview",
 ] as const;
 type Stage = (typeof STAGES)[number];
 const STAGE_META: Record<Stage, { label: string; className: string }> = {
@@ -31,6 +31,11 @@ const STAGE_META: Record<Stage, { label: string; className: string }> = {
     label: "Applied",
     className:
       "border-gray-300 bg-gray-100 text-gray-800 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-300",
+  },
+  cv_rejected: {
+    label: "CV Rejected",
+    className:
+      "border-rose-300 bg-rose-100 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-400",
   },
   hr_call: {
     label: "HR Call",
@@ -56,11 +61,6 @@ const STAGE_META: Record<Stage, { label: string; className: string }> = {
     label: "Ghosted",
     className:
       "border-zinc-300 bg-zinc-100 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300",
-  },
-  rejected_no_interview: {
-    label: "No Interview",
-    className:
-      "border-rose-300 bg-rose-100 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-400",
   },
 };
 const BADGE_BASE =

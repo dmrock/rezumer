@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as applications from "../applications.js";
+import type * as migrateStages from "../migrateStages.js";
 import type * as users from "../users.js";
 
 /**
@@ -26,6 +27,7 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   applications: typeof applications;
+  migrateStages: typeof migrateStages;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

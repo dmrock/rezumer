@@ -3,12 +3,12 @@ import { v } from "convex/values";
 
 const STAGES = [
   "applied",
+  "cv_rejected",
   "hr_call",
   "tech_interview",
   "offer",
   "rejected",
   "ghosted",
-  "rejected_no_interview",
 ] as const;
 type Stage = (typeof STAGES)[number];
 

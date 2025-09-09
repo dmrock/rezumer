@@ -14,9 +14,9 @@ export default function DashboardClient() {
   const createUser = useMutation(api.users.createUser);
   const applications = useQuery(api.applications.listApplications) ?? [];
   const totalApplications = applications.length;
-  // Interviews = all applications excluding: applied, ghosted, rejected_no_interview
+  // Interviews = all applications excluding: applied, ghosted, cv_rejected
   const interviewsCount = applications.filter(
-    (a) => !["applied", "ghosted", "rejected_no_interview"].includes(a.stage as string),
+    (a) => !["applied", "ghosted", "cv_rejected"].includes(a.stage as string),
   ).length;
   const responseRate =
     totalApplications > 0 ? Math.round((interviewsCount / totalApplications) * 100) : 0;

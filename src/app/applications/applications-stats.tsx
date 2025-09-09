@@ -12,16 +12,16 @@ type Stage =
   | "offer"
   | "rejected"
   | "ghosted"
-  | "rejected_no_interview";
+  | "cv_rejected";
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: "applied", label: "Total" },
+  { key: "cv_rejected", label: "CV Rejected" }, // moved directly after Total per request
   { key: "hr_call", label: "HR Call" },
   { key: "tech_interview", label: "Tech" },
   { key: "offer", label: "Offer" },
   { key: "rejected", label: "Rejected" },
   { key: "ghosted", label: "Ghosted" },
-  { key: "rejected_no_interview", label: "No Interview" },
 ];
 
 function isSameMonth(dateStr: string, ref: Date) {
@@ -49,7 +49,7 @@ export function ApplicationsStats() {
   );
 
   for (const a of applications) {
-    const stage = (a.stage || "applied") as Stage;
+    const stage = (a.stage as Stage) || "applied";
     if (stage in counts.all) counts.all[stage]! += 1;
     if (isSameMonth(a.date, now) && stage in counts.month) counts.month[stage]! += 1;
   }

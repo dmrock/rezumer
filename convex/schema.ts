@@ -16,7 +16,7 @@ export default defineSchema({
     company: v.string(), // Company name
     jobTitle: v.string(), // Job title
     salary: v.optional(v.number()), // Salary (optional)
-    stage: v.string(), // applied | hr_call | tech_interview | offer | rejected | ghosted | rejected_no_interview
+    stage: v.string(), // applied | cv_rejected | hr_call | tech_interview | offer | rejected | ghosted
     date: v.string(), // Date of the stage
     notes: v.string(), // Optional notes
   }).index("by_user", ["userId"]),
