@@ -9,6 +9,7 @@ import { Plus, FileText, ClipboardList, Users, BarChart3, Wrench } from "lucide-
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import type { Doc } from "../../../convex/_generated/dataModel";
 
 export default function DashboardClient() {
   const { user } = useUser();
@@ -18,8 +19,9 @@ export default function DashboardClient() {
   const applications = user ? (applicationsQuery ?? []) : [];
   const totalApplications = applications.length;
   // Interviews = all applications excluding: applied, ghosted, cv_rejected
-  const interviewsCount = applications.filter(
-    (a: any) => !["applied", "ghosted", "cv_rejected"].includes(a.stage as string),
+  type ApplicationDoc = Doc<"applications">;
+  const interviewsCount = (applications as ApplicationDoc[]).filter(
+    (a) => !["applied", "ghosted", "cv_rejected"].includes(a.stage as string),
   ).length;
   const responseRate =
     totalApplications > 0 ? Math.round((interviewsCount / totalApplications) * 100) : 0;

@@ -16,6 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import type { Id } from "../../../convex/_generated/dataModel";
 
+// Local date helper: returns YYYY-MM-DD using local timezone (avoids UTC off-by-one)
+function nowLocalYMD(d: Date = new Date()): string {
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
 const STAGES = [
   "applied",
   "cv_rejected",
@@ -65,14 +71,6 @@ const STAGE_META: Record<Stage, { label: string; className: string }> = {
 };
 const BADGE_BASE =
   "inline-flex h-7 items-center rounded border px-2 text-sm font-medium whitespace-nowrap";
-type ApplicationEditable = {
-  company: string;
-  jobTitle: string;
-  salary: string; // keep as string while editing
-  stage: Stage;
-  date: string;
-  notes: string;
-};
 
 export function ApplicationsClient() {
   const applications = useQuery(api.applications.listApplications) ?? [];
@@ -87,7 +85,7 @@ export function ApplicationsClient() {
     jobTitle: "",
     salary: "",
     stage: "applied",
-    date: today,
+    date: nowLocalYMD(),
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -105,19 +103,24 @@ export function ApplicationsClient() {
 
   // Listen to header button to open the modal
   React.useEffect(() => {
+    // Capture today's date at effect run to avoid depending on 'today' variable.
     const handler = () => {
-      // open in create mode
+      const todayLocal = new Date().toISOString().slice(0, 10);
       setEditingAppId(null);
-      setForm({ company: "", jobTitle: "", salary: "", stage: "applied", date: today, notes: "" });
+      setForm({
+        company: "",
+        jobTitle: "",
+        salary: "",
+        stage: "applied",
+        date: nowLocalYMD(),
+        notes: "",
+      });
       setOpen(true);
     };
-    if (typeof window !== "undefined") {
-      window.addEventListener("open-add-application", handler);
-    }
+    if (typeof window !== "undefined") window.addEventListener("open-add-application", handler);
     return () => {
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined")
         window.removeEventListener("open-add-application", handler);
-      }
     };
   }, []);
 
@@ -188,6 +191,14 @@ export function ApplicationsClient() {
       // reset after submit
       setEditingAppId(null);
       setForm({ company: "", jobTitle: "", salary: "", stage: "applied", date: today, notes: "" });
+      setForm({
+        company: "",
+        jobTitle: "",
+        salary: "",
+        stage: "applied",
+        date: nowLocalYMD(),
+        notes: "",
+      });
       setOpen(false);
     } finally {
       setSubmitting(false);
@@ -239,7 +250,7 @@ export function ApplicationsClient() {
                 jobTitle: "",
                 salary: "",
                 stage: "applied",
-                date: today,
+                date: nowLocalYMD(),
                 notes: "",
               });
             }
