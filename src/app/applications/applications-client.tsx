@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, ChevronDown, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,6 +77,7 @@ export function ApplicationsClient() {
   const createApplication = useMutation(api.applications.createApplication);
   const updateApplication = useMutation(api.applications.updateApplication);
   const deleteApplication = useMutation(api.applications.deleteApplication);
+  const toggleFavorite = useMutation(api.applications.toggleFavorite);
 
   // Add form state
   const today = new Date().toISOString().slice(0, 10);
@@ -466,32 +467,52 @@ export function ApplicationsClient() {
                     </td>
                     <td className="align-center p-2">
                       <div className="flex justify-end gap-2">
-                        <>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => openEditModal(a._id)}
-                            aria-label="Edit"
-                            title="Edit"
-                            className="hover:cursor-pointer"
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => {
-                              if (confirm(`Delete application for ${a.company}?`)) {
-                                remove(a._id);
-                              }
-                            }}
-                            aria-label="Delete"
-                            title="Delete"
-                            className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => toggleFavorite({ id: a._id, value: !a.favorite })}
+                          aria-label={a.favorite ? "Unfavorite" : "Favorite"}
+                          title={a.favorite ? "Unfavorite" : "Favorite"}
+                          className={
+                            "transition-colors hover:cursor-pointer " +
+                            (a.favorite
+                              ? "border-yellow-200 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:border-yellow-600/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50"
+                              : "text-muted-foreground border-yellow-200/40 hover:border-yellow-300 hover:text-yellow-500 dark:border-yellow-700/40")
+                          }
+                        >
+                          <Star
+                            className={
+                              "size-4 " +
+                              (a.favorite
+                                ? "fill-yellow-400 stroke-yellow-600 dark:fill-yellow-500 dark:stroke-yellow-400"
+                                : "stroke-current")
+                            }
+                          />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => openEditModal(a._id)}
+                          aria-label="Edit"
+                          title="Edit"
+                          className="hover:cursor-pointer"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => {
+                            if (confirm(`Delete application for ${a.company}?`)) {
+                              remove(a._id);
+                            }
+                          }}
+                          aria-label="Delete"
+                          title="Delete"
+                          className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
