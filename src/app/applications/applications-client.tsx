@@ -79,8 +79,7 @@ export function ApplicationsClient() {
   const deleteApplication = useMutation(api.applications.deleteApplication);
   const toggleFavorite = useMutation(api.applications.toggleFavorite);
 
-  // Add form state
-  const today = new Date().toISOString().slice(0, 10);
+  // Add form state (dates use local timezone via nowLocalYMD to avoid UTC off-by-one)
   const [form, setForm] = useState({
     company: "",
     jobTitle: "",
@@ -106,7 +105,6 @@ export function ApplicationsClient() {
   React.useEffect(() => {
     // Capture today's date at effect run to avoid depending on 'today' variable.
     const handler = () => {
-      const todayLocal = new Date().toISOString().slice(0, 10);
       setEditingAppId(null);
       setForm({
         company: "",
@@ -191,7 +189,6 @@ export function ApplicationsClient() {
       }
       // reset after submit
       setEditingAppId(null);
-      setForm({ company: "", jobTitle: "", salary: "", stage: "applied", date: today, notes: "" });
       setForm({
         company: "",
         jobTitle: "",
