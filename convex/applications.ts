@@ -79,6 +79,7 @@ export const createApplication = mutation({
       stage: args.stage,
       date: args.date,
       notes: args.notes,
+      favorite: false,
     });
 
     return id;
@@ -140,5 +141,24 @@ export const deleteApplication = mutation({
     if (!user || app.userId !== user._id) throw new Error("Forbidden");
 
     await ctx.db.delete(args.id);
+  },
+});
+
+export const toggleFavorite = mutation({
+  args: { id: v.id("applications"), value: v.boolean() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const app = await ctx.db.get(args.id);
+    if (!app) throw new Error("Application not found");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+    if (!user || app.userId !== user._id) throw new Error("Forbidden");
+
+    await ctx.db.patch(args.id, { favorite: args.value });
   },
 });

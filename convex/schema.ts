@@ -19,5 +19,6 @@ export default defineSchema({
     stage: v.string(), // applied | cv_rejected | hr_call | tech_interview | offer | rejected | ghosted
     date: v.string(), // Date of the stage
     notes: v.string(), // Optional notes
+    favorite: v.optional(v.boolean()), // Mark application as favorite (optional; defaults false)
   }).index("by_user", ["userId"]),
 });
