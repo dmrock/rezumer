@@ -16,7 +16,8 @@ export const listApplications = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    // Gracefully handle unauthenticated users (e.g., initial render before Clerk loads)
+    if (!identity) return [];
 
     // Find user document by Clerk subject
     const user = await ctx.db

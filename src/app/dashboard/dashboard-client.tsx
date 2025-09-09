@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
 import { Plus, FileText, ClipboardList, Users, BarChart3, Wrench } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
@@ -12,11 +13,13 @@ import { api } from "../../../convex/_generated/api";
 export default function DashboardClient() {
   const { user } = useUser();
   const createUser = useMutation(api.users.createUser);
-  const applications = useQuery(api.applications.listApplications) ?? [];
+  // Only subscribe once the user is loaded; when undefined, we'll treat as empty list.
+  const applicationsQuery = useQuery(api.applications.listApplications);
+  const applications = user ? (applicationsQuery ?? []) : [];
   const totalApplications = applications.length;
   // Interviews = all applications excluding: applied, ghosted, cv_rejected
   const interviewsCount = applications.filter(
-    (a) => !["applied", "ghosted", "cv_rejected"].includes(a.stage as string),
+    (a: any) => !["applied", "ghosted", "cv_rejected"].includes(a.stage as string),
   ).length;
   const responseRate =
     totalApplications > 0 ? Math.round((interviewsCount / totalApplications) * 100) : 0;
@@ -63,17 +66,23 @@ export default function DashboardClient() {
             </div>
           </Card>
 
-          <Card className="border-border bg-card hover:bg-accent/50 border p-6 transition-all hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm font-medium">Applications</p>
-                <p className="text-foreground text-3xl font-bold">{totalApplications}</p>
+          <Link
+            href="/applications"
+            aria-label="View all applications"
+            className="focus-visible:ring-ring block rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          >
+            <Card className="border-border bg-card hover:bg-accent/50 cursor-pointer border p-6 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium">Applications</p>
+                  <p className="text-foreground text-3xl font-bold">{totalApplications}</p>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/20">
+                  <ClipboardList className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/20">
-                <ClipboardList className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           <Card className="border-border bg-card hover:bg-accent/50 border p-6 transition-all hover:shadow-md">
             <div className="flex items-center justify-between">
