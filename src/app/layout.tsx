@@ -4,7 +4,6 @@ import ConvexClientProvider from "@/components/convex-client-provider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/header";
-import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -37,7 +36,6 @@ export default function RootLayout({
           >
             <ThemeProvider>
               <Header />
-              <Navbar />
               <main className="from-background to-muted min-h-0 flex-1 bg-gradient-to-b">
                 {children}
               </main>
