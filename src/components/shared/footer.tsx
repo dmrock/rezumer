@@ -14,7 +14,7 @@ export function Footer() {
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6">
         <div className="flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
           <p className="text-muted-foreground text-xs">© {year} Rezumer</p>
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
             {links.map((link) => (
               <Link
                 key={link.href}
