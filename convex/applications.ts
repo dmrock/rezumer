@@ -70,6 +70,20 @@ export const createApplication = mutation({
       user = await ctx.db.get(userId);
     }
 
+    // Enforce per-user application limit (200). Limit the query to avoid scanning all docs.
+    const MAX_APPLICATIONS = 200;
+    const existing = await ctx.db
+      .query("applications")
+      .withIndex("by_user", (q) => q.eq("userId", user!._id))
+      .take(MAX_APPLICATIONS + 1); // only fetch what we need to know if limit hit
+    if (existing.length >= MAX_APPLICATIONS) {
+      // Throw a recognizable error message that frontend can parse.
+      const limitError = new Error("APPLICATION_LIMIT_REACHED");
+      // @ts-expect-error augmenting error with code property for frontend detection
+      limitError.code = "APPLICATION_LIMIT_REACHED";
+      throw limitError;
+    }
+
     const id = await ctx.db.insert("applications", {
       userId: user!._id,
       company: args.company,

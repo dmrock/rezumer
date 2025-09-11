@@ -113,6 +113,7 @@ export function ApplicationsClient() {
     maxHeight: number;
   } | null>(null);
   const [errors, setErrors] = useState<{ salary?: string }>({});
+  const [limitError, setLimitError] = useState<string | null>(null);
 
   // Listen to header button to open the modal
   React.useEffect(() => {
@@ -167,6 +168,7 @@ export function ApplicationsClient() {
     e.preventDefault();
     try {
       setSubmitting(true);
+      setLimitError(null);
       // Validate salary if provided
       const salaryStr = form.salary.trim();
       let parsedSalary: number | undefined = undefined;
@@ -198,7 +200,32 @@ export function ApplicationsClient() {
       if (editingAppId) {
         await updateApplication({ id: editingAppId, ...base, ...salaryPatch });
       } else {
-        await createApplication({ ...base, ...salaryPatch });
+        try {
+          await createApplication({ ...base, ...salaryPatch });
+        } catch (err) {
+          const message = (() => {
+            if (typeof err === "string") return err;
+            if (err && typeof err === "object") {
+              const maybe: unknown = (err as { data?: unknown }).data;
+              if (maybe && typeof maybe === "object" && "message" in maybe) {
+                const m = (maybe as { message?: unknown }).message;
+                if (typeof m === "string") return m;
+              }
+              if ("message" in err) {
+                const m = (err as { message?: unknown }).message;
+                if (typeof m === "string") return m;
+              }
+            }
+            return "";
+          })();
+          if (message.includes("APPLICATION_LIMIT_REACHED")) {
+            setLimitError(
+              "You reached the limit of 200 applications. Please delete some existing entries before adding a new one.",
+            );
+            return; // don't close modal
+          }
+          throw err; // rethrow unknown
+        }
       }
       // reset after submit
       setEditingAppId(null);
@@ -353,6 +380,9 @@ export function ApplicationsClient() {
                       : "Add"}
                 </Button>
               </DialogFooter>
+              {limitError && (
+                <p className="mt-2 text-sm text-red-600 md:col-span-6">{limitError}</p>
+              )}
             </form>
           </DialogContent>
         </Dialog>
