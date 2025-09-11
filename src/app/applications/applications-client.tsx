@@ -14,7 +14,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Id, Doc } from "../../../convex/_generated/dataModel";
+type ApplicationDoc = Doc<"applications">;
 
 // Local date helper: returns YYYY-MM-DD using local timezone (avoids UTC off-by-one)
 function nowLocalYMD(d: Date = new Date()): string {
@@ -73,7 +74,8 @@ const BADGE_BASE =
   "inline-flex h-7 items-center rounded border px-2 text-sm font-medium whitespace-nowrap";
 
 export function ApplicationsClient() {
-  const applications = useQuery(api.applications.listApplications) ?? [];
+  // Explicitly type the query result to avoid implicit any usage later.
+  const applications = (useQuery(api.applications.listApplications) ?? []) as ApplicationDoc[];
   const createApplication = useMutation(api.applications.createApplication);
   const updateApplication = useMutation(api.applications.updateApplication);
   const deleteApplication = useMutation(api.applications.deleteApplication);
@@ -84,8 +86,8 @@ export function ApplicationsClient() {
   const applicationsSorted = [...applications].sort((a, b) => {
     if (a.date !== b.date) return a.date < b.date ? 1 : -1;
     // Stable tie-breakers to avoid jitter when dates match
-    const ca = (a as any)._creationTime ?? 0;
-    const cb = (b as any)._creationTime ?? 0;
+    const ca: number = a._creationTime ?? 0;
+    const cb: number = b._creationTime ?? 0;
     if (ca !== cb) return cb - ca;
     return String(b._id).localeCompare(String(a._id));
   });
