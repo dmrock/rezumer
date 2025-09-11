@@ -79,6 +79,17 @@ export function ApplicationsClient() {
   const deleteApplication = useMutation(api.applications.deleteApplication);
   const toggleFavorite = useMutation(api.applications.toggleFavorite);
 
+  // Sort by applied date (most recent first) every render to reflect in-place updates.
+  // Dates are YYYY-MM-DD, so string comparison is chronological.
+  const applicationsSorted = [...applications].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    // Stable tie-breakers to avoid jitter when dates match
+    const ca = (a as any)._creationTime ?? 0;
+    const cb = (b as any)._creationTime ?? 0;
+    if (ca !== cb) return cb - ca;
+    return String(b._id).localeCompare(String(a._id));
+  });
+
   // Add form state (dates use local timezone via nowLocalYMD to avoid UTC off-by-one)
   const [form, setForm] = useState({
     company: "",
@@ -361,7 +372,7 @@ export function ApplicationsClient() {
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
-              {applications.map((a) => {
+              {applicationsSorted.map((a) => {
                 return (
                   <tr key={a._id} className="hover:bg-accent/50">
                     <td className="align-center p-2">{a.company}</td>
@@ -515,7 +526,7 @@ export function ApplicationsClient() {
                   </tr>
                 );
               })}
-              {applications.length === 0 && (
+              {applicationsSorted.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-muted-foreground p-8 text-center">
                     No applications yet. Use the “Add application” button above.
