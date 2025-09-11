@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rezumer
 
-## Getting Started
+Fast, free, open-source job application tracking and single‑page resume generation.
 
-First, run the development server:
+Rezumer aims to give candidates a clean, transparent tool to manage their job search without paywalls or lock‑in.
+
+## Goals
+
+1. Help users systematically track positions, applications, statuses and outcomes.
+2. Enable quick generation of a concise single‑page resume.
+3. Speed up job search workflows with a focused UI.
+4. Remain fully open so anyone can self‑host or extend.
+
+## Feature Status
+
+- [x] Base Next.js App Router foundation
+- [x] Authentication (Clerk)
+- [x] Data layer on Convex (reactive backend)
+- [ ] Applications list: sorting, filtering [In Progress...]
+- [ ] Board / pipeline view (kanban) [?]
+- [ ] Data export (CSV / JSON)
+- [ ] Single‑page resume generator (template + editor)
+- [ ] Public shareable resume link
+- [ ] Import (LinkedIn / CSV / other) – research
+- [ ] Follow‑up reminders / notifications
+
+## Tech Stack
+
+| Layer          | Tech                                                                        |
+| -------------- | --------------------------------------------------------------------------- |
+| Frontend       | Next.js 15 (App Router), React 19                                           |
+| UI             | Tailwind CSS 4, Radix UI primitives, class-variance-authority, lucide-react |
+| Theming        | next-themes (light/dark)                                                    |
+| Auth           | Clerk (`@clerk/nextjs`)                                                     |
+| Backend (BaaS) | Convex (functions + reactive queries)                                       |
+| Language       | TypeScript                                                                  |
+| Infra / Deploy | Vercel (or self-host)                                                       |
+| Code Quality   | ESLint, Prettier, prettier-plugin-tailwindcss                               |
+
+## Quick Start (Local)
+
+Requirements: Node 18+, PNPM (recommended), Clerk keys (dev or production), Convex CLI.
+
+1. Clone:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/<your-username>/rezumer.git
+cd rezumer
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install deps:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Create `.env.local`:
 
-## Learn More
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
+CLERK_SECRET_KEY=...
+CONVEX_DEPLOYMENT=dev:... # created after starting convex dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Start Convex (separate terminal):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm convex:dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. Start app:
 
-## Deploy on Vercel
+```bash
+pnpm dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. Open http://localhost:3000
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+```
+convex/          # Convex schema & server functions
+src/app/         # Next.js routes (App Router)
+src/components/  # UI & functional components
+src/lib/         # Utilities
+public/          # Static assets
+```
+
+## Roadmap (High-Level)
+
+- MVP application tracking (CRUD, sorting, filters)
+- Kanban / pipeline visualization
+- Resume generator (editor + PDF/share link)
+- Data export / import
+- Follow‑up reminders
+- Public API & integrations
+
+## Contributing
+
+Contributions welcome.
+
+1. Open an issue to discuss scope first (optional but helpful)
+2. Fork and create a branch: `feat/<topic>`
+3. Follow conventional commit style (`feat: ...`, `fix: ...`, `docs: ...`)
+4. Run lint & build before PR
+5. Submit PR with clear description (motivation + changes)
+
+### Quality Checks
+
+```bash
+pnpm lint
+pnpm build
+```
+
+## Testing
+
+Not implemented yet. Planned: unit/integration (React Testing Library) + e2e (Playwright).
+
+## Privacy
+
+Self‑hosting gives you full data ownership. If a hosted SaaS version appears later, a transparent policy will accompany it.
+
+## License
+
+Planned: permissive OSS license (likely MIT). Until finalized: "All rights reserved" during early stage. Feedback via issues is welcome.
+
+## Acknowledgements
+
+- Next.js & Vercel ecosystem
+- Convex for reactive backend simplicity
+- Radix UI & Tailwind for rapid UI development
+
+---
+
+If this project helps you, consider starring it and sharing feedback.
