@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, isValidElement, cloneElement } from "react";
 
 type PageHeaderProps = {
   title: string;
@@ -7,16 +7,36 @@ type PageHeaderProps = {
 };
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
+  // If an action element is provided we clone it to enforce a smaller size on mobile
+  const sizedAction =
+    action && isValidElement(action)
+      ? cloneElement(action as any, {
+          className: [
+            // Mobile size (reduced)
+            "h-8 px-2.5 text-sm",
+            // Restore / keep default sizing on larger screens
+            "sm:h-9 sm:px-3",
+            (action as any).props?.className || "",
+          ]
+            .join(" ")
+            .trim(),
+        })
+      : action;
+
   return (
     <div className="relative mb-8">
-      <div className="flex items-center justify-between pb-5">
-        <div>
-          <h1 className="text-foreground mb-2 text-4xl font-bold">{title}</h1>
-          {description ? <p className="text-muted-foreground text-lg">{description}</p> : null}
+      <div className="flex items-center justify-between gap-4 pb-5">
+        <div className="min-w-0">
+          <h1 className="text-foreground mb-2 text-2xl leading-tight font-bold sm:text-4xl">
+            {title}
+          </h1>
+          {description ? (
+            <p className="text-muted-foreground text-base sm:text-lg">{description}</p>
+          ) : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {sizedAction ? <div className="shrink-0">{sizedAction}</div> : null}
       </div>
-      {/* Full-bleed underline across the viewport, slightly thicker and brighter */}
+      {/* Full-bleed underline across the viewport */}
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-[1.5px] w-screen -translate-x-1/2 bg-[var(--color-border)] opacity-80" />
     </div>
   );

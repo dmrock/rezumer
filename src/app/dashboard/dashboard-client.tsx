@@ -113,19 +113,6 @@ export default function DashboardClient() {
             </div>
           </Card>
         </div>
-
-        {/* Under construction message */}
-        <div className="flex items-center justify-center" style={{ height: "calc(100vh - 500px)" }}>
-          <div className="just w-full max-w-xl rounded-md p-8 text-center">
-            <Wrench className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-            <p className="text-foreground mb-1 text-base font-medium md:text-lg">
-              This feature is under development.
-            </p>
-            <p className="text-muted-foreground text-sm md:text-base">
-              I&apos;m working on it and will ship it soon.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
