@@ -5,20 +5,13 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card } from "@/components/ui/card";
 
-type Stage =
-  | "applied"
-  | "hr_call"
-  | "tech_interview"
-  | "offer"
-  | "rejected"
-  | "ghosted"
-  | "cv_rejected";
+type Stage = "applied" | "hr_call" | "interview" | "offer" | "rejected" | "ghosted" | "cv_rejected";
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: "applied", label: "Total" },
   { key: "cv_rejected", label: "CV Rejected" }, // moved directly after Total per request
   { key: "hr_call", label: "HR Call" },
-  { key: "tech_interview", label: "Tech" },
+  { key: "interview", label: "Interview" },
   { key: "offer", label: "Offer" },
   { key: "rejected", label: "Rejected" },
   { key: "ghosted", label: "Ghosted" },
@@ -90,8 +83,28 @@ export function ApplicationsStats() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-5 lg:grid-cols-7">
         {STAGES.map((s) => {
           const isApplied = s.key === "applied";
-          const allVal = isApplied ? totalAll : counts.all[s.key] || 0;
-          const monthVal = isApplied ? totalMonth : counts.month[s.key] || 0;
+          // Base counts
+          let allVal = isApplied ? totalAll : counts.all[s.key] || 0;
+          let monthVal = isApplied ? totalMonth : counts.month[s.key] || 0;
+
+          // Aggregation rules:
+          // HR CALL = hr_call + interview + offer + rejected
+          // INTERVIEW = interview + offer
+          if (s.key === "hr_call") {
+            allVal =
+              (counts.all.hr_call || 0) +
+              (counts.all.interview || 0) +
+              (counts.all.offer || 0) +
+              (counts.all.rejected || 0);
+            monthVal =
+              (counts.month.hr_call || 0) +
+              (counts.month.interview || 0) +
+              (counts.month.offer || 0) +
+              (counts.month.rejected || 0);
+          } else if (s.key === "interview") {
+            allVal = (counts.all.interview || 0) + (counts.all.offer || 0);
+            monthVal = (counts.month.interview || 0) + (counts.month.offer || 0);
+          }
           const showPct = !isApplied;
           const allPct = showPct ? pct(allVal, totalAll) : undefined;
           const monthPct = showPct ? pct(monthVal, totalMonth) : undefined;

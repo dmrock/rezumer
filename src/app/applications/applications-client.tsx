@@ -27,7 +27,7 @@ const STAGES = [
   "applied",
   "cv_rejected",
   "hr_call",
-  "tech_interview",
+  "interview",
   "offer",
   "rejected",
   "ghosted",
@@ -49,8 +49,8 @@ const STAGE_META: Record<Stage, { label: string; className: string }> = {
     className:
       "border-blue-300 bg-blue-100 text-blue-800 dark:border-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   },
-  tech_interview: {
-    label: "Tech",
+  interview: {
+    label: "Interview",
     className:
       "border-violet-300 bg-violet-100 text-violet-800 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
   },

@@ -5,7 +5,7 @@ const STAGES = [
   "applied",
   "cv_rejected",
   "hr_call",
-  "tech_interview",
+  "interview",
   "offer",
   "rejected",
   "ghosted",
