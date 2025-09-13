@@ -17,6 +17,9 @@ const STAGES: { key: Stage; label: string }[] = [
   { key: "ghosted", label: "Ghosted" },
 ];
 
+// Keys that should remain visible on mobile (others hidden until md breakpoint)
+const MOBILE_VISIBLE: ReadonlySet<Stage> = new Set<Stage>(["applied", "interview", "offer"]);
+
 function isSameMonth(dateStr: string, ref: Date) {
   const d = new Date(dateStr);
   return d.getUTCFullYear() === ref.getUTCFullYear() && d.getUTCMonth() === ref.getUTCMonth();
@@ -80,7 +83,8 @@ export function ApplicationsStats() {
           </span>
         </label>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-5 lg:grid-cols-7">
+      {/* Mobile: 3 columns, then widen to 5 (md) and 7 (lg) */}
+      <div className="grid grid-cols-3 gap-3 md:grid-cols-7">
         {STAGES.map((s) => {
           const isApplied = s.key === "applied";
           // Base counts
@@ -112,14 +116,25 @@ export function ApplicationsStats() {
           const activeVal = timeframe === "all" ? allVal : monthVal;
           const activePct = timeframe === "all" ? allPct : monthPct;
 
+          // Show only Total (applied), Interview, Offer on mobile; others appear from md breakpoint
+          const visibilityClass = MOBILE_VISIBLE.has(s.key) ? "" : "hidden md:block";
           return (
-            <Card key={s.key} className="border-border bg-card/60 border p-3 backdrop-blur">
-              <div className="text-muted-foreground text-xs tracking-wide uppercase">{s.label}</div>
-              <div className="flex items-end justify-between gap-2">
-                <div className="text-2xl leading-tight font-semibold">
-                  {activeVal}
+            <Card
+              key={s.key}
+              className={`border-border bg-card/60 border p-3 backdrop-blur ${visibilityClass}`}
+            >
+              <div className="flex flex-col">
+                <div className="text-muted-foreground text-xs tracking-wide uppercase">
+                  {s.label}
+                </div>
+                <div className="mt-2 flex items-baseline">
+                  <span className="text-2xl leading-tight font-semibold tabular-nums">
+                    {activeVal}
+                  </span>
                   {showPct && (
-                    <span className="text-muted-foreground ml-2 text-xs">{activePct}%</span>
+                    <span className="text-muted-foreground ml-2 text-xs tabular-nums">
+                      {activePct}%
+                    </span>
                   )}
                 </div>
               </div>
