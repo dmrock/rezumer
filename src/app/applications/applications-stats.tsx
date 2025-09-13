@@ -17,6 +17,9 @@ const STAGES: { key: Stage; label: string }[] = [
   { key: "ghosted", label: "Ghosted" },
 ];
 
+// Keys that should remain visible on mobile (others hidden until md breakpoint)
+const MOBILE_VISIBLE: ReadonlySet<Stage> = new Set<Stage>(["applied", "interview", "offer"]);
+
 function isSameMonth(dateStr: string, ref: Date) {
   const d = new Date(dateStr);
   return d.getUTCFullYear() === ref.getUTCFullYear() && d.getUTCMonth() === ref.getUTCMonth();
@@ -81,7 +84,7 @@ export function ApplicationsStats() {
         </label>
       </div>
       {/* Mobile: 3 columns, then widen to 5 (md) and 7 (lg) */}
-      <div className="grid grid-cols-3 gap-3 md:grid-cols-7 lg:grid-cols-7">
+      <div className="grid grid-cols-3 gap-3 md:grid-cols-7">
         {STAGES.map((s) => {
           const isApplied = s.key === "applied";
           // Base counts
@@ -114,8 +117,7 @@ export function ApplicationsStats() {
           const activePct = timeframe === "all" ? allPct : monthPct;
 
           // Show only Total (applied), Interview, Offer on mobile; others appear from md breakpoint
-          const mobileVisible = s.key === "applied" || s.key === "interview" || s.key === "offer";
-          const visibilityClass = mobileVisible ? "" : "hidden md:block";
+          const visibilityClass = MOBILE_VISIBLE.has(s.key) ? "" : "hidden md:block";
           return (
             <Card
               key={s.key}
