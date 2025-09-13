@@ -1,4 +1,4 @@
-import { ReactNode, isValidElement, cloneElement } from "react";
+import { ReactNode, isValidElement, cloneElement, ReactElement } from "react";
 import { twMerge } from "tailwind-merge";
 
 type PageHeaderProps = {
@@ -9,17 +9,20 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   // If an action element is provided we clone it to enforce a smaller size on mobile
-  const sizedAction =
-    action && isValidElement(action)
-      ? cloneElement(action as any, {
-          // Merge user-provided classes first, then apply enforced mobile-first sizing so they win on conflicts
-          className: twMerge(
-            (action as any).props?.className || "",
-            // Enforced defaults appended so that in conflict (e.g., different h-/px-/text- size) these take precedence for mobile
-            "h-8 px-2.5 text-sm sm:h-9 sm:px-3",
-          ),
-        })
-      : action;
+  const sizedAction: ReactNode = (() => {
+    if (action && isValidElement(action)) {
+      const actionElement = action as ReactElement<{ className?: string }>;
+      return cloneElement(actionElement, {
+        // Merge user-provided classes first, then apply enforced mobile-first sizing so they win on conflicts
+        className: twMerge(
+          actionElement.props.className || "",
+          // Enforced defaults appended so that in conflict (e.g., different h-/px-/text- size) these take precedence for mobile
+          "h-8 px-2.5 text-sm sm:h-9 sm:px-3",
+        ),
+      });
+    }
+    return action;
+  })();
 
   return (
     <div className="relative mb-8">

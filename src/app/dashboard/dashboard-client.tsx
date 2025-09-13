@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
-import { Star, FileText, ClipboardList, Users, BarChart3, Wrench } from "lucide-react";
+import { Star, FileText, ClipboardList, Users, BarChart3 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
