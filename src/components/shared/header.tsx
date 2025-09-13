@@ -13,6 +13,8 @@ export function Header() {
   const isSignInPage = pathname?.startsWith("/sign-in");
   const listRef = useRef<HTMLDivElement | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Stable id tying the toggle button to the collapsible mobile navigation panel (disclosure pattern)
+  const mobilePanelId = "mobile-nav-panel";
 
   // Close the mobile menu whenever the route changes
   useEffect(() => {
@@ -78,6 +80,7 @@ export function Header() {
               type="button"
               aria-label="Toggle navigation"
               aria-expanded={mobileOpen}
+              aria-controls={mobilePanelId}
               onClick={() => setMobileOpen((o) => !o)}
               className="border-border/60 text-foreground/80 hover:text-foreground inline-flex h-9 w-9 items-center justify-center rounded-md border sm:hidden"
             >
@@ -120,8 +123,8 @@ export function Header() {
         {/* Mobile dropdown panel */}
         {mobileOpen && (
           <div
+            id={mobilePanelId}
             className="border-border/60 bg-background absolute top-full right-0 left-0 border-b shadow-md sm:hidden"
-            role="dialog"
             aria-label="Mobile navigation"
           >
             <nav className="flex flex-col py-2" aria-label="Primary mobile">

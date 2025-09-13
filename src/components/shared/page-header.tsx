@@ -1,4 +1,5 @@
 import { ReactNode, isValidElement, cloneElement } from "react";
+import { twMerge } from "tailwind-merge";
 
 type PageHeaderProps = {
   title: string;
@@ -11,15 +12,12 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
   const sizedAction =
     action && isValidElement(action)
       ? cloneElement(action as any, {
-          className: [
-            // Mobile size (reduced)
-            "h-8 px-2.5 text-sm",
-            // Restore / keep default sizing on larger screens
-            "sm:h-9 sm:px-3",
+          // Merge user-provided classes first, then apply enforced mobile-first sizing so they win on conflicts
+          className: twMerge(
             (action as any).props?.className || "",
-          ]
-            .join(" ")
-            .trim(),
+            // Enforced defaults appended so that in conflict (e.g., different h-/px-/text- size) these take precedence for mobile
+            "h-8 px-2.5 text-sm sm:h-9 sm:px-3",
+          ),
         })
       : action;
 
