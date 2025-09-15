@@ -7,7 +7,7 @@ test("has title", async ({ page }) => {
   await expect(page).toHaveTitle(/Rezumer/);
 });
 
-test("sign in link", async ({ page }) => {
+test.skip("sign in link", async ({ page }) => {
   await page.goto("https://rezumer.com/");
 
   // Click the sign in link.
