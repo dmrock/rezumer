@@ -118,6 +118,12 @@ Currently: basic end‑to‑end smoke tests with Playwright (landing page) are s
 
 ### E2E (Playwright)
 
+First-time setup (installs Playwright browsers):
+
+```bash
+pnpm exec playwright install
+```
+
 Run locally (auto starts dev server if not already running):
 
 ```bash
@@ -135,12 +141,14 @@ Key config: `playwright.config.ts`
 Add new tests under `e2e/tests/`. Example pattern:
 
 ```ts
-import { test, expect } from "@playwright/test";
-import { LandingPage } from "../pages/landing.page";
+import { test, expect } from "../fixtures";
 
-test("landing has title", async ({ page }) => {
-  const landing = new LandingPage(page);
-  await landing.goto();
+test.beforeEach(async ({ page }) => {
+  // Go to the starting url before each test.
+  await page.goto("/");
+});
+
+test("has title", async ({ page }) => {
   await expect(page).toHaveTitle(/Rezumer/i);
 });
 ```
