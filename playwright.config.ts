@@ -80,9 +80,22 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  // Start Next.js automatically. In CI we build then start; locally we run dev server and reuse if already running.
+  webServer: process.env.CI
+    ? {
+        command: "pnpm build && pnpm start",
+        url: "http://localhost:3000",
+        reuseExistingServer: false,
+        stdout: "pipe",
+        stderr: "pipe",
+        timeout: 120_000,
+      }
+    : {
+        command: "pnpm dev",
+        url: "http://localhost:3000",
+        reuseExistingServer: true,
+        stdout: "ignore",
+        stderr: "pipe",
+        timeout: 120_000,
+      },
 });
