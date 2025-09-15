@@ -5,6 +5,6 @@ export class LandingPage extends BasePage {
   signInLink = this.page.getByRole("link", { name: "Sign in" });
 
   async goto() {
-    await this.page.goto("https://rezumer.com");
+    await this.page.goto("/");
   }
 }
