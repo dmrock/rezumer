@@ -1,18 +1,12 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../fixtures";
 
-test("has title", async ({ page }) => {
-  await page.goto("https://rezumer.com/");
-
-  // Expect a title "to contain" a substring.
+test("has title", async ({ page, landingPage }) => {
+  await landingPage.goto();
   await expect(page).toHaveTitle(/Rezumer/);
 });
 
-test.skip("sign in link", async ({ page }) => {
-  await page.goto("https://rezumer.com/");
-
-  // Click the sign in link.
-  await page.getByRole("link", { name: "Sign in" }).click();
-
-  // Expects page to have a heading with the name of Continue to rezumer.
-  await expect(page.getByRole("heading", { name: "Continue to rezumer" })).toBeVisible();
+test("sign in options", async ({ page, landingPage }) => {
+  await landingPage.goto();
+  await expect(landingPage.signInBtn).toBeVisible();
+  await expect(landingPage.signInLink).toBeVisible();
 });
