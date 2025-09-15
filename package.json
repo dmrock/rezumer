@@ -11,7 +11,8 @@
     "start": "next start",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.6",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

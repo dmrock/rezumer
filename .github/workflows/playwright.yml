@@ -1,0 +1,32 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+      CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

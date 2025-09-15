@@ -114,7 +114,46 @@ pnpm build
 
 ## Testing
 
-Not implemented yet. Planned: unit/integration (React Testing Library) + e2e (Playwright).
+Currently: basic end‑to‑end smoke tests with Playwright (landing page) are set up.
+
+### E2E (Playwright)
+
+First-time setup (installs Playwright browsers):
+
+```bash
+pnpm exec playwright install
+```
+
+Run locally (auto starts dev server if not already running):
+
+```bash
+pnpm test:e2e
+```
+
+Key config: `playwright.config.ts`
+
+- `use.baseURL` set to `http://localhost:3000` so tests can `page.goto('/')`.
+- `webServer` section:
+  - Local: runs `pnpm dev` and `reuseExistingServer: true` (so you can keep a dev server running for faster iterations).
+  - CI: runs `pnpm build && pnpm start` with `reuseExistingServer: false` for a production build.
+- Artifacts (trace, screenshot, video) retained only on failures in CI.
+
+Add new tests under `e2e/tests/`. Example pattern:
+
+```ts
+import { test, expect } from "../fixtures";
+
+test.beforeEach(async ({ page }) => {
+  // Go to the starting url before each test.
+  await page.goto("/");
+});
+
+test("has title", async ({ page }) => {
+  await expect(page).toHaveTitle(/Rezumer/i);
+});
+```
+
+Future: add component/unit tests (React Testing Library + Vitest or Jest) and extend e2e coverage (auth flows, applications CRUD, dark mode toggle, errors, etc.).
 
 ## Privacy
 
