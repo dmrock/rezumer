@@ -42,18 +42,6 @@ export default function DashboardClient() {
         <PageHeader
           title="Dashboard"
           description="Welcome back! Here's an overview of your job search progress."
-          action={
-            <Link
-              href="https://github.com/dmrock/rezumer"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open the Rezumer repository on GitHub and leave a star"
-              className="border-border bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex items-center rounded-md border px-5 py-2.5 text-sm font-medium shadow-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            >
-              <Star className="mr-2 h-5 w-5" />
-              Star us on GitHub
-            </Link>
-          }
         />
 
         {/* Quick Stats */}

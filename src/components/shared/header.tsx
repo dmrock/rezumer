@@ -6,7 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Menu, X, Star } from "lucide-react";
 
 export function Header() {
   const pathname = usePathname();
@@ -94,7 +95,28 @@ export function Header() {
 
         {/* Right side actions (always visible) */}
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* Hide on mobile; show from sm and up to avoid conflict with base inline-flex in Button */}
+          <div className="hidden sm:block">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="cursor-pointer border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+            >
+              <Link
+                href="https://github.com/dmrock/rezumer"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open the Rezumer repository on GitHub and leave a star"
+              >
+                <Star className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                <span>Star us on GitHub</span>
+              </Link>
+            </Button>
+          </div>
+
           <ThemeToggle />
+
           <SignedIn>
             <UserButton
               appearance={{
@@ -107,6 +129,7 @@ export function Header() {
               }}
             />
           </SignedIn>
+
           <SignedOut>
             {!isSignInPage && (
               <SignInButton mode="modal">
