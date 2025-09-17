@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ChevronDown, Star } from "lucide-react";
+import { Pencil, Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,7 +18,7 @@ import {
 import type { Id, Doc } from "../../../convex/_generated/dataModel";
 type ApplicationDoc = Doc<"applications">;
 
-// Local date helper: returns YYYY-MM-DD using local timezone (avoids UTC off-by-one)
+// Local date helper: returns YYYY-MM-DD using local timezone
 function nowLocalYMD(d: Date = new Date()): string {
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
@@ -81,18 +82,33 @@ export function ApplicationsClient() {
   const deleteApplication = useMutation(api.applications.deleteApplication);
   const toggleFavorite = useMutation(api.applications.toggleFavorite);
 
-  // Sort by applied date (most recent first) every render to reflect in-place updates.
-  // Dates are YYYY-MM-DD, so string comparison is chronological.
-  const applicationsSorted = [...applications].sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-    // Stable tie-breakers to avoid jitter when dates match
-    const ca: number = a._creationTime ?? 0;
-    const cb: number = b._creationTime ?? 0;
-    if (ca !== cb) return cb - ca;
-    return String(b._id).localeCompare(String(a._id));
-  });
+  // Sorting/filter state (default newest first)
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const onlyFavorites = (searchParams?.get("fav") ?? "") === "1";
+  function setOnlyFavorites(next: boolean) {
+    const sp = new URLSearchParams(searchParams?.toString() || "");
+    if (next) sp.set("fav", "1");
+    else sp.delete("fav");
+    router.replace("?" + sp.toString());
+  }
 
-  // Add form state (dates use local timezone via nowLocalYMD to avoid UTC off-by-one)
+  // Compute filtered + sorted view (YYYY-MM-DD strings compare chronologically)
+  const applicationsSorted = React.useMemo(() => {
+    const base = onlyFavorites ? applications.filter((a) => !!a.favorite) : applications;
+    const sign = sortDir === "desc" ? -1 : 1; // when desc, reverse chronological
+    return [...base].sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? -sign : sign;
+      // Stable tie-breakers to avoid jitter when dates match
+      const ca: number = a._creationTime ?? 0;
+      const cb: number = b._creationTime ?? 0;
+      if (ca !== cb) return (ca - cb) * sign;
+      return String(a._id).localeCompare(String(b._id)) * sign;
+    });
+  }, [applications, onlyFavorites, sortDir]);
+
+  // Add form state (dates use local timezone via nowLocalYMD)
   const [form, setForm] = useState({
     company: "",
     jobTitle: "",
@@ -148,7 +164,7 @@ export function ApplicationsClient() {
     };
   }, []);
 
-  // Close dropdown on scroll/resize to avoid misalignment
+  // Close stage dropdown on scroll/resize
   React.useEffect(() => {
     if (!stageMenuFor) return;
     const close = () => setStageMenuFor(null);
@@ -227,7 +243,7 @@ export function ApplicationsClient() {
           throw err; // rethrow unknown
         }
       }
-      // reset after submit
+      // Reset after submit
       setEditingAppId(null);
       setForm({
         company: "",
@@ -274,7 +290,7 @@ export function ApplicationsClient() {
 
   return (
     <div className="space-y-6">
-      {/* Add application modal - opened from header button */}
+      {/* Add application modal (opened via header button) */}
       <div className="flex justify-end">
         <Dialog
           open={open}
@@ -388,6 +404,32 @@ export function ApplicationsClient() {
         </Dialog>
       </div>
 
+      {/* Favorites filter ABOVE the table (right-aligned) */}
+      <div className="mt-2 mb-4 flex justify-end gap-4 text-sm">
+        <label className="inline-flex cursor-pointer items-center gap-2">
+          <input
+            type="radio"
+            name="favoritesFilter"
+            value="all"
+            checked={!onlyFavorites}
+            onChange={() => setOnlyFavorites(false)}
+            className="accent-primary h-4 w-4 cursor-pointer"
+          />
+          <span className={!onlyFavorites ? "font-medium" : "text-muted-foreground"}>All</span>
+        </label>
+        <label className="inline-flex cursor-pointer items-center gap-2">
+          <input
+            type="radio"
+            name="favoritesFilter"
+            value="favorites"
+            checked={onlyFavorites}
+            onChange={() => setOnlyFavorites(true)}
+            className="accent-primary h-4 w-4 cursor-pointer"
+          />
+          <span className={onlyFavorites ? "font-medium" : "text-muted-foreground"}>Favorites</span>
+        </label>
+      </div>
+
       {/* Table */}
       <Card className="border-border bg-card border p-0">
         <div className="overflow-x-auto">
@@ -398,7 +440,26 @@ export function ApplicationsClient() {
                 <th className="p-3">Job Title</th>
                 <th className="p-3">Annual Salary</th>
                 <th className="p-3">Stage</th>
-                <th className="p-3">Date</th>
+                <th className="p-3">
+                  <button
+                    type="button"
+                    className="hover:text-foreground group inline-flex cursor-pointer items-center gap-1 text-inherit"
+                    onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+                    aria-label={
+                      sortDir === "desc" ? "Sort by date ascending" : "Sort by date descending"
+                    }
+                    title={
+                      sortDir === "desc" ? "Sort by date ascending" : "Sort by date descending"
+                    }
+                  >
+                    <span>Date</span>
+                    {sortDir === "desc" ? (
+                      <ChevronDown className="size-4 opacity-70 group-hover:opacity-100" />
+                    ) : (
+                      <ChevronUp className="size-4 opacity-70 group-hover:opacity-100" />
+                    )}
+                  </button>
+                </th>
                 <th className="p-3">Notes</th>
                 <th className="p-3 text-right">Actions</th>
               </tr>
@@ -561,7 +622,9 @@ export function ApplicationsClient() {
               {applicationsSorted.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-muted-foreground p-8 text-center">
-                    No applications yet. Use the “Add application” button above.
+                    {onlyFavorites
+                      ? "No favorite applications yet. Switch to All to see everything."
+                      : "No applications yet. Use the “Add application” button above."}
                   </td>
                 </tr>
               )}
