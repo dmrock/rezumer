@@ -7,7 +7,7 @@ import Image from "next/image";
 export default async function Home() {
   const { userId } = await auth();
   if (userId) {
-    redirect("/dashboard");
+    redirect("/applications");
   }
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-6 py-24">

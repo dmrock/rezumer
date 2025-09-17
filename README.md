@@ -76,6 +76,10 @@ pnpm dev
 
 6. Open http://localhost:3000
 
+Notes:
+
+- After signing in, authenticated users are redirected to `/applications` (the primary app page).
+
 ## Project Structure
 
 ```

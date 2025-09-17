@@ -81,8 +81,8 @@ Optional: custom sign-in path
 
 - We use `/sign-in` route. Set these public envs (already in `.env.example`):
   - `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
-  - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard`
-  - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard`
+  - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/applications`
+  - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/applications`
 
 ## 4) Vercel project
 
@@ -113,7 +113,7 @@ After env vars are set in Vercel:
 - Trigger a deployment by pushing to `main`.
 - Verify the app builds and renders the landing page `/`.
 - Visit `/sign-in` and complete the flow.
-- Go to `/dashboard` and other protected routes.
+- After sign-in you should land on `/applications` (primary app page). Other protected routes require auth.
 
 After verifying Clerk custom domain:
 
