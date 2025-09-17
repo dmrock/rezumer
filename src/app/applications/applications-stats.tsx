@@ -55,7 +55,7 @@ export function ApplicationsStats() {
 
   return (
     <div className="mb-3">
-      <div className="mb-4 flex gap-4 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-4 text-sm">
         <label className="inline-flex cursor-pointer items-center gap-2">
           <input
             type="radio"
@@ -142,6 +142,7 @@ export function ApplicationsStats() {
           );
         })}
       </div>
+      {/* Controls below the stats are handled in ApplicationsClient */}
     </div>
   );
 }
