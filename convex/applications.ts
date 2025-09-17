@@ -129,13 +129,29 @@ export const updateApplication = mutation({
       throw new Error("Invalid stage value");
     }
 
-    const { id, clearSalary, ...rest } = args as typeof args & { [k: string]: any };
-    const patch: Record<string, any> = { ...rest };
-    if (clearSalary) {
+    // Build a typed patch object without using `any`
+    const patch: {
+      company?: string;
+      jobTitle?: string;
+      salary?: number | undefined;
+      stage?: string;
+      date?: string;
+      notes?: string;
+    } = {};
+
+    if (args.company !== undefined) patch.company = args.company;
+    if (args.jobTitle !== undefined) patch.jobTitle = args.jobTitle;
+    if (args.salary !== undefined) patch.salary = args.salary;
+    if (args.stage !== undefined) patch.stage = args.stage;
+    if (args.date !== undefined) patch.date = args.date;
+    if (args.notes !== undefined) patch.notes = args.notes;
+
+    if (args.clearSalary) {
       // Remove the salary field from the document
       patch.salary = undefined;
     }
-    await ctx.db.patch(id, patch);
+
+    await ctx.db.patch(args.id, patch);
   },
 });
 

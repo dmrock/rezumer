@@ -22,7 +22,6 @@ export function Header() {
   }, [pathname]);
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard" },
     { href: "/applications", label: "Applications" },
     { href: "/resumes", label: "Resumes" },
   ];
@@ -58,7 +57,7 @@ export function Header() {
                       key={item.href}
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      className={`relative inline-flex h-12 items-center rounded-md px-3 text-sm font-medium no-underline transition-opacity duration-200 ease-linear select-none ${
+                      className={`relative inline-flex h-12 select-none items-center rounded-md px-3 text-sm font-medium no-underline transition-opacity duration-200 ease-linear ${
                         active
                           ? "opacity-100"
                           : "opacity-60 hover:opacity-100 focus-visible:opacity-100"
@@ -66,7 +65,7 @@ export function Header() {
                     >
                       {item.label}
                       {active && (
-                        <span className="pointer-events-none absolute right-2 -bottom-px left-2 h-0.5 bg-[var(--color-foreground)]" />
+                        <span className="pointer-events-none absolute -bottom-px left-2 right-2 h-0.5 bg-[var(--color-foreground)]" />
                       )}
                     </Link>
                   );
@@ -145,7 +144,7 @@ export function Header() {
         {mobileOpen && (
           <div
             id={mobilePanelId}
-            className="border-border/60 bg-background absolute top-full right-0 left-0 border-b shadow-md sm:hidden"
+            className="border-border/60 bg-background absolute left-0 right-0 top-full border-b shadow-md sm:hidden"
             aria-label="Mobile navigation"
           >
             <nav className="flex flex-col py-2" aria-label="Primary mobile">
