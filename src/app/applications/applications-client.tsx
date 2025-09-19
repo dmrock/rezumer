@@ -87,6 +87,7 @@ export function ApplicationsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const onlyFavorites = (searchParams?.get("fav") ?? "") === "1";
+  const onlyThisMonth = (searchParams?.get("month") ?? "") === "1";
   function setOnlyFavorites(next: boolean) {
     const sp = new URLSearchParams(searchParams?.toString() || "");
     if (next) sp.set("fav", "1");
@@ -96,7 +97,14 @@ export function ApplicationsClient() {
 
   // Compute filtered + sorted view (YYYY-MM-DD strings compare chronologically)
   const applicationsSorted = React.useMemo(() => {
-    const base = onlyFavorites ? applications.filter((a) => !!a.favorite) : applications;
+    const baseFav = onlyFavorites ? applications.filter((a) => !!a.favorite) : applications;
+    // If month filter is active, restrict to items whose date is in current month (UTC, to match stats)
+    const now = new Date();
+    const inSameUtcMonth = (dateStr: string) => {
+      const d = new Date(dateStr);
+      return d.getUTCFullYear() === now.getUTCFullYear() && d.getUTCMonth() === now.getUTCMonth();
+    };
+    const base = onlyThisMonth ? baseFav.filter((a) => inSameUtcMonth(a.date)) : baseFav;
     const sign = sortDir === "desc" ? -1 : 1; // when desc, reverse chronological
     return [...base].sort((a, b) => {
       if (a.date !== b.date) return a.date < b.date ? -sign : sign;
@@ -106,7 +114,7 @@ export function ApplicationsClient() {
       if (ca !== cb) return (ca - cb) * sign;
       return String(a._id).localeCompare(String(b._id)) * sign;
     });
-  }, [applications, onlyFavorites, sortDir]);
+  }, [applications, onlyFavorites, onlyThisMonth, sortDir]);
 
   // Add form state (dates use local timezone via nowLocalYMD)
   const [form, setForm] = useState({
@@ -622,9 +630,13 @@ export function ApplicationsClient() {
               {applicationsSorted.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-muted-foreground p-8 text-center">
-                    {onlyFavorites
-                      ? "No favorite applications yet. Switch to All to see everything."
-                      : "No applications yet. Use the “Add application” button above."}
+                    {onlyFavorites && onlyThisMonth
+                      ? "No favorite applications this month. Switch to All time or All to see more."
+                      : onlyThisMonth
+                        ? "No applications this month. Switch to All time to see everything."
+                        : onlyFavorites
+                          ? "No favorite applications yet. Switch to All to see everything."
+                          : "No applications yet. Use the “Add application” button above."}
                   </td>
                 </tr>
               )}

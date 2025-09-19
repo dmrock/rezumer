@@ -4,6 +4,7 @@ import React from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Card } from "@/components/ui/card";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Stage = "applied" | "hr_call" | "interview" | "offer" | "rejected" | "ghosted" | "cv_rejected";
 
@@ -33,7 +34,9 @@ function pct(numerator: number, denominator: number) {
 export function ApplicationsStats() {
   const applications = useQuery(api.applications.listApplications) ?? [];
   const now = new Date();
-  const [timeframe, setTimeframe] = React.useState<"all" | "month">("all");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isMonth = (searchParams?.get("month") ?? "") === "1";
 
   const counts = STAGES.reduce(
     (acc, s) => {
@@ -61,26 +64,30 @@ export function ApplicationsStats() {
             type="radio"
             name="timeframe"
             value="all"
-            checked={timeframe === "all"}
-            onChange={() => setTimeframe("all")}
+            checked={!isMonth}
+            onChange={() => {
+              const sp = new URLSearchParams(searchParams?.toString() || "");
+              sp.delete("month");
+              router.replace("?" + sp.toString());
+            }}
             className="accent-primary h-4 w-4 cursor-pointer"
           />
-          <span className={timeframe === "all" ? "font-medium" : "text-muted-foreground"}>
-            All time
-          </span>
+          <span className={!isMonth ? "font-medium" : "text-muted-foreground"}>All time</span>
         </label>
         <label className="inline-flex cursor-pointer items-center gap-2">
           <input
             type="radio"
             name="timeframe"
             value="month"
-            checked={timeframe === "month"}
-            onChange={() => setTimeframe("month")}
+            checked={isMonth}
+            onChange={() => {
+              const sp = new URLSearchParams(searchParams?.toString() || "");
+              sp.set("month", "1");
+              router.replace("?" + sp.toString());
+            }}
             className="accent-primary h-4 w-4 cursor-pointer"
           />
-          <span className={timeframe === "month" ? "font-medium" : "text-muted-foreground"}>
-            This month
-          </span>
+          <span className={isMonth ? "font-medium" : "text-muted-foreground"}>This month</span>
         </label>
       </div>
       {/* Mobile: 3 columns, then widen to 5 (md) and 7 (lg) */}
@@ -113,8 +120,8 @@ export function ApplicationsStats() {
           const allPct = showPct ? pct(allVal, totalAll) : undefined;
           const monthPct = showPct ? pct(monthVal, totalMonth) : undefined;
 
-          const activeVal = timeframe === "all" ? allVal : monthVal;
-          const activePct = timeframe === "all" ? allPct : monthPct;
+          const activeVal = isMonth ? monthVal : allVal;
+          const activePct = isMonth ? monthPct : allPct;
 
           // Show only Total (applied), Interview, Offer on mobile; others appear from md breakpoint
           const visibilityClass = MOBILE_VISIBLE.has(s.key) ? "" : "hidden md:block";
