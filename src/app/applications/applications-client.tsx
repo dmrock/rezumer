@@ -586,7 +586,7 @@ export function ApplicationsClient() {
                             "transition-colors hover:cursor-pointer " +
                             (a.favorite
                               ? "border-yellow-200 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:border-yellow-600/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50"
-                              : "text-muted-foreground border-yellow-200/40 hover:border-yellow-300 hover:text-yellow-500 dark:border-yellow-700/40")
+                              : "text-muted-foreground border-yellow-200/40 hover:!bg-yellow-100/50 hover:!text-yellow-600 dark:border-yellow-700/40 dark:hover:!bg-yellow-900/50")
                           }
                         >
                           <Star
@@ -604,9 +604,9 @@ export function ApplicationsClient() {
                           onClick={() => openEditModal(a._id)}
                           aria-label="Edit"
                           title="Edit"
-                          className="hover:cursor-pointer"
+                          className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-blue-50 hover:!text-blue-600 dark:border-yellow-700/40 dark:hover:!bg-blue-900/30 dark:hover:!text-blue-400"
                         >
-                          <Pencil className="size-4" />
+                          <Pencil className="size-4 stroke-current" />
                         </Button>
                         <Button
                           size="icon"
@@ -618,9 +618,9 @@ export function ApplicationsClient() {
                           }}
                           aria-label="Delete"
                           title="Delete"
-                          className="border-red-200 bg-red-50 text-red-600 hover:cursor-pointer hover:bg-red-100 hover:text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/60"
+                          className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-red-50 hover:!text-red-600 dark:border-yellow-700/40 dark:hover:!bg-red-950/40 dark:hover:!text-red-400"
                         >
-                          <Trash2 className="size-4" />
+                          <Trash2 className="size-4 stroke-current" />
                         </Button>
                       </div>
                     </td>
