@@ -76,7 +76,7 @@ const BADGE_BASE =
 
 export function ApplicationsClient() {
   // Explicitly type the query result to avoid implicit any usage later.
-  const applications = (useQuery(api.applications.listApplications) ?? []) as ApplicationDoc[];
+  const applications = useQuery(api.applications.listApplications) as ApplicationDoc[] | undefined;
   const createApplication = useMutation(api.applications.createApplication);
   const updateApplication = useMutation(api.applications.updateApplication);
   const deleteApplication = useMutation(api.applications.deleteApplication);
@@ -97,6 +97,7 @@ export function ApplicationsClient() {
 
   // Compute filtered + sorted view (YYYY-MM-DD strings compare chronologically)
   const applicationsSorted = React.useMemo(() => {
+    if (!applications) return [] as ApplicationDoc[];
     const baseFav = onlyFavorites ? applications.filter((a) => !!a.favorite) : applications;
     // If month filter is active, restrict to items whose date is in current month (UTC, to match stats)
     const now = new Date();
@@ -115,6 +116,8 @@ export function ApplicationsClient() {
       return String(a._id).localeCompare(String(b._id)) * sign;
     });
   }, [applications, onlyFavorites, onlyThisMonth, sortDir]);
+
+  const isLoading = applications === undefined;
 
   // Add form state (dates use local timezone via nowLocalYMD)
   const [form, setForm] = useState({
@@ -268,6 +271,7 @@ export function ApplicationsClient() {
   }
 
   function openEditModal(id: Id<"applications">) {
+    if (!applications) return; // still loading
     const a = applications.find((x) => x._id === id);
     if (!a) return;
     setEditingAppId(id);
@@ -473,172 +477,209 @@ export function ApplicationsClient() {
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
-              {applicationsSorted.map((a) => {
-                return (
-                  <tr key={a._id} className="hover:bg-accent/50">
-                    <td className="align-center p-2">{a.company}</td>
-                    <td className="align-center p-2">{a.jobTitle}</td>
-                    <td className="align-center p-2">
-                      {a.salary != null ? `${Number(a.salary).toLocaleString()}` : "—"}
+              {isLoading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <tr key={i} className="hover:bg-accent/50">
+                    <td className="p-2">
+                      <div className="bg-muted h-4 w-3/5 animate-pulse rounded" />
                     </td>
-                    <td className="align-center p-2">
-                      <div className="relative flex items-center gap-2">
-                        <span
-                          className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
-                        >
-                          {STAGE_META[(a.stage as Stage) || "applied"].label}
-                        </span>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-7 w-7"
-                          aria-label="Change stage"
-                          title="Change stage"
-                          aria-expanded={stageMenuFor === a._id}
-                          disabled={savingStage !== null}
-                          onClick={(e) => {
-                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                            const menuWidth = 176; // w-44
-                            const gap = 8; // space between button and menu
-                            const vw = window.innerWidth;
-                            const left = Math.min(
-                              Math.max(8, rect.right - menuWidth),
-                              vw - menuWidth - 8,
-                            );
-                            // estimate menu height based on items
-                            const itemH = 36; // ~h per item (text-sm + padding)
-                            const chrome = 8; // container padding/border
-                            const estimatedHeight = itemH * STAGES.length + chrome;
-                            const vh = window.innerHeight;
-                            const spaceBelow = vh - rect.bottom - gap;
-                            const spaceAbove = rect.top - gap;
-                            const placeAbove = spaceBelow < Math.min(estimatedHeight, spaceAbove);
-                            const maxHeight = Math.max(
-                              120,
-                              Math.min(
-                                estimatedHeight,
-                                placeAbove ? spaceAbove - 8 : spaceBelow - 8,
-                              ),
-                            );
-                            const top = placeAbove ? undefined : rect.bottom + gap;
-                            const bottom = placeAbove
-                              ? Math.max(8, window.innerHeight - rect.top + gap)
-                              : undefined;
-                            setStageMenuFor((cur) => {
-                              const next = cur === a._id ? null : a._id;
-                              if (next) setStageMenuPos({ top, bottom, left, maxHeight });
-                              else setStageMenuPos(null);
-                              return next;
-                            });
-                          }}
-                        >
-                          <ChevronDown className="size-4" />
-                        </Button>
-                        {stageMenuFor === a._id && (
-                          <>
-                            {/* overlay to close on outside click */}
-                            <div
-                              className="fixed inset-0 z-[999]"
-                              onClick={() => setStageMenuFor(null)}
-                            />
-                            <div
-                              className="border-border bg-popover text-popover-foreground fixed z-[1000] w-44 overflow-auto rounded-md border p-1 shadow-md"
-                              role="menu"
-                              style={{
-                                top: stageMenuPos?.top,
-                                bottom: stageMenuPos?.bottom,
-                                left: stageMenuPos?.left ?? 0,
-                                maxHeight: stageMenuPos?.maxHeight ?? 240,
-                              }}
-                            >
-                              {STAGES.map((s) => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  className="hover:bg-accent hover:text-accent-foreground w-full rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
-                                  disabled={savingStage !== null || s === (a.stage as Stage)}
-                                  onClick={async () => {
-                                    await changeStage(a._id, s as Stage);
-                                    setStageMenuFor(null);
-                                  }}
-                                >
-                                  {STAGE_META[s].label}
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                    <td className="p-2">
+                      <div className="bg-muted h-4 w-2/3 animate-pulse rounded" />
                     </td>
-                    <td className="align-center p-2">{a.date}</td>
-                    <td className="align-center p-2">
-                      <span className="line-clamp-2 max-w-[28rem] break-words">{a.notes}</span>
+                    <td className="p-2">
+                      <div className="bg-muted h-4 w-1/3 animate-pulse rounded" />
                     </td>
-                    <td className="align-center p-2">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => toggleFavorite({ id: a._id, value: !a.favorite })}
-                          aria-label={a.favorite ? "Unfavorite" : "Favorite"}
-                          title={a.favorite ? "Unfavorite" : "Favorite"}
-                          className={
-                            "transition-colors hover:cursor-pointer " +
-                            (a.favorite
-                              ? "border-yellow-200 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:border-yellow-600/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50"
-                              : "text-muted-foreground border-yellow-200/40 hover:!bg-yellow-100/50 hover:!text-yellow-600 dark:border-yellow-700/40 dark:hover:!bg-yellow-900/50")
-                          }
-                        >
-                          <Star
-                            className={
-                              "size-4 " +
-                              (a.favorite
-                                ? "fill-yellow-400 stroke-yellow-600 dark:fill-yellow-500 dark:stroke-yellow-400"
-                                : "stroke-current")
-                            }
-                          />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => openEditModal(a._id)}
-                          aria-label="Edit"
-                          title="Edit"
-                          className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-blue-50 hover:!text-blue-600 dark:border-yellow-700/40 dark:hover:!bg-blue-900/30 dark:hover:!text-blue-400"
-                        >
-                          <Pencil className="size-4 stroke-current" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => {
-                            if (confirm(`Delete application for ${a.company}?`)) {
-                              remove(a._id);
-                            }
-                          }}
-                          aria-label="Delete"
-                          title="Delete"
-                          className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-red-50 hover:!text-red-600 dark:border-yellow-700/40 dark:hover:!bg-red-950/40 dark:hover:!text-red-400"
-                        >
-                          <Trash2 className="size-4 stroke-current" />
-                        </Button>
+                    <td className="p-2">
+                      <div className="bg-muted h-7 w-24 animate-pulse rounded" />
+                    </td>
+                    <td className="p-2">
+                      <div className="bg-muted h-4 w-20 animate-pulse rounded" />
+                    </td>
+                    <td className="p-2">
+                      <div className="bg-muted h-4 w-4/5 animate-pulse rounded" />
+                    </td>
+                    <td className="p-2">
+                      <div className="ml-auto flex justify-end gap-2">
+                        <div className="bg-muted h-7 w-7 animate-pulse rounded-md" />
+                        <div className="bg-muted h-7 w-7 animate-pulse rounded-md" />
+                        <div className="bg-muted h-7 w-7 animate-pulse rounded-md" />
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-              {applicationsSorted.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-muted-foreground p-8 text-center">
-                    {onlyFavorites && onlyThisMonth
-                      ? "No favorite applications this month. Switch to All time or All to see more."
-                      : onlyThisMonth
-                        ? "No applications this month. Switch to All time to see everything."
-                        : onlyFavorites
-                          ? "No favorite applications yet. Switch to All to see everything."
-                          : "No applications yet. Use the “Add application” button above."}
-                  </td>
-                </tr>
+                ))
+              ) : (
+                <>
+                  {applicationsSorted.map((a) => {
+                    return (
+                      <tr key={a._id} className="hover:bg-accent/50">
+                        <td className="align-center p-2">{a.company}</td>
+                        <td className="align-center p-2">{a.jobTitle}</td>
+                        <td className="align-center p-2">
+                          {a.salary != null ? `${Number(a.salary).toLocaleString()}` : "—"}
+                        </td>
+                        <td className="align-center p-2">
+                          <div className="relative flex items-center gap-2">
+                            <span
+                              className={`${BADGE_BASE} ${STAGE_META[(a.stage as Stage) || "applied"].className}`}
+                            >
+                              {STAGE_META[(a.stage as Stage) || "applied"].label}
+                            </span>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-7 w-7"
+                              aria-label="Change stage"
+                              title="Change stage"
+                              aria-expanded={stageMenuFor === a._id}
+                              disabled={savingStage !== null}
+                              onClick={(e) => {
+                                const rect = (
+                                  e.currentTarget as HTMLElement
+                                ).getBoundingClientRect();
+                                const menuWidth = 176; // w-44
+                                const gap = 8; // space between button and menu
+                                const vw = window.innerWidth;
+                                const left = Math.min(
+                                  Math.max(8, rect.right - menuWidth),
+                                  vw - menuWidth - 8,
+                                );
+                                // estimate menu height based on items
+                                const itemH = 36; // ~h per item (text-sm + padding)
+                                const chrome = 8; // container padding/border
+                                const estimatedHeight = itemH * STAGES.length + chrome;
+                                const vh = window.innerHeight;
+                                const spaceBelow = vh - rect.bottom - gap;
+                                const spaceAbove = rect.top - gap;
+                                const placeAbove =
+                                  spaceBelow < Math.min(estimatedHeight, spaceAbove);
+                                const maxHeight = Math.max(
+                                  120,
+                                  Math.min(
+                                    estimatedHeight,
+                                    placeAbove ? spaceAbove - 8 : spaceBelow - 8,
+                                  ),
+                                );
+                                const top = placeAbove ? undefined : rect.bottom + gap;
+                                const bottom = placeAbove
+                                  ? Math.max(8, window.innerHeight - rect.top + gap)
+                                  : undefined;
+                                setStageMenuFor((cur) => {
+                                  const next = cur === a._id ? null : a._id;
+                                  if (next) setStageMenuPos({ top, bottom, left, maxHeight });
+                                  else setStageMenuPos(null);
+                                  return next;
+                                });
+                              }}
+                            >
+                              <ChevronDown className="size-4" />
+                            </Button>
+                            {stageMenuFor === a._id && (
+                              <>
+                                {/* overlay to close on outside click */}
+                                <div
+                                  className="fixed inset-0 z-[999]"
+                                  onClick={() => setStageMenuFor(null)}
+                                />
+                                <div
+                                  className="border-border bg-popover text-popover-foreground fixed z-[1000] w-44 overflow-auto rounded-md border p-1 shadow-md"
+                                  role="menu"
+                                  style={{
+                                    top: stageMenuPos?.top,
+                                    bottom: stageMenuPos?.bottom,
+                                    left: stageMenuPos?.left ?? 0,
+                                    maxHeight: stageMenuPos?.maxHeight ?? 240,
+                                  }}
+                                >
+                                  {STAGES.map((s) => (
+                                    <button
+                                      key={s}
+                                      type="button"
+                                      className="hover:bg-accent hover:text-accent-foreground w-full rounded px-2 py-1.5 text-left text-sm disabled:opacity-50"
+                                      disabled={savingStage !== null || s === (a.stage as Stage)}
+                                      onClick={async () => {
+                                        await changeStage(a._id, s as Stage);
+                                        setStageMenuFor(null);
+                                      }}
+                                    >
+                                      {STAGE_META[s].label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="align-center p-2">{a.date}</td>
+                        <td className="align-center p-2">
+                          <span className="line-clamp-2 max-w-[28rem] break-words">{a.notes}</span>
+                        </td>
+                        <td className="align-center p-2">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => toggleFavorite({ id: a._id, value: !a.favorite })}
+                              aria-label={a.favorite ? "Unfavorite" : "Favorite"}
+                              title={a.favorite ? "Unfavorite" : "Favorite"}
+                              className={
+                                "transition-colors hover:cursor-pointer " +
+                                (a.favorite
+                                  ? "border-yellow-200 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:border-yellow-600/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50"
+                                  : "text-muted-foreground border-yellow-200/40 hover:!bg-yellow-100/50 hover:!text-yellow-600 dark:border-yellow-700/40 dark:hover:!bg-yellow-900/50")
+                              }
+                            >
+                              <Star
+                                className={
+                                  "size-4 " +
+                                  (a.favorite
+                                    ? "fill-yellow-400 stroke-yellow-600 dark:fill-yellow-500 dark:stroke-yellow-400"
+                                    : "stroke-current")
+                                }
+                              />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => openEditModal(a._id)}
+                              aria-label="Edit"
+                              title="Edit"
+                              className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-blue-50 hover:!text-blue-600 dark:border-yellow-700/40 dark:hover:!bg-blue-900/30 dark:hover:!text-blue-400"
+                            >
+                              <Pencil className="size-4 stroke-current" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => {
+                                if (confirm(`Delete application for ${a.company}?`)) {
+                                  remove(a._id);
+                                }
+                              }}
+                              aria-label="Delete"
+                              title="Delete"
+                              className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-red-50 hover:!text-red-600 dark:border-yellow-700/40 dark:hover:!bg-red-950/40 dark:hover:!text-red-400"
+                            >
+                              <Trash2 className="size-4 stroke-current" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {applicationsSorted.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="text-muted-foreground p-8 text-center">
+                        {onlyFavorites && onlyThisMonth
+                          ? "No favorite applications this month. Switch to All time or All to see more."
+                          : onlyThisMonth
+                            ? "No applications this month. Switch to All time to see everything."
+                            : onlyFavorites
+                              ? "No favorite applications yet. Switch to All to see everything."
+                              : "No applications yet. Use the “Add application” button above."}
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
