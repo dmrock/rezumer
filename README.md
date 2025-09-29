@@ -16,11 +16,10 @@ Rezumer aims to give candidates a clean, transparent tool to manage their job se
 - [x] Base Next.js App Router foundation
 - [x] Authentication (Clerk)
 - [x] Data layer on Convex (reactive backend)
-- [ ] Applications list: sorting, filtering [In Progress...]
-- [ ] Board / pipeline view (kanban) [?]
-- [ ] Data export (CSV / JSON)
+- [x] Applications list: sorting, filtering
 - [ ] Single‑page resume generator (template + editor)
 - [ ] Public shareable resume link
+- [ ] Data export (CSV / JSON)
 - [ ] Import (LinkedIn / CSV / other) – research
 - [ ] Follow‑up reminders / notifications
 
