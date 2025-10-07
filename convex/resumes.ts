@@ -291,6 +291,79 @@ export const savePdfToResume = mutation({
       throw new Error("Forbidden");
     }
 
+    // Verify file exists and validate it's a legitimate PDF
+    const fileUrl = await ctx.storage.getUrl(args.storageId);
+    if (!fileUrl) {
+      throw new Error("Invalid storage ID: file not found");
+    }
+
+    // Download the file content to validate PDF magic numbers
+    let isValidPdf = false;
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch uploaded file");
+      }
+
+      // Check content-type header
+      const contentType = response.headers.get("content-type");
+      if (contentType !== "application/pdf") {
+        await ctx.storage.delete(args.storageId);
+        throw new Error(`Invalid content type: ${contentType}. Only PDF files are allowed.`);
+      }
+
+      // Read first chunk to check magic numbers and file size
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      // Validate file size
+      if (bytes.length > MAX_SIZE) {
+        await ctx.storage.delete(args.storageId);
+        throw new Error(
+          `File too large: ${(bytes.length / 1024 / 1024).toFixed(1)}MB. Maximum allowed size is 5MB.`,
+        );
+      }
+
+      // Check PDF magic numbers (file signature)
+      // Valid PDF files start with "%PDF-" (0x25 0x50 0x44 0x46 0x2D)
+      if (
+        bytes.length >= 5 &&
+        bytes[0] === 0x25 && // %
+        bytes[1] === 0x50 && // P
+        bytes[2] === 0x44 && // D
+        bytes[3] === 0x46 && // F
+        bytes[4] === 0x2d // -
+      ) {
+        isValidPdf = true;
+      }
+
+      // Additional check: PDF should end with %%EOF
+      const lastBytes = bytes.slice(-10);
+      const endString = new TextDecoder().decode(lastBytes);
+      if (!endString.includes("%%EOF")) {
+        isValidPdf = false;
+      }
+
+      if (!isValidPdf) {
+        await ctx.storage.delete(args.storageId);
+        throw new Error(
+          "Invalid PDF file: File signature verification failed. Only valid PDF files are allowed.",
+        );
+      }
+    } catch (error) {
+      // If validation fails, delete the file
+      await ctx.storage.delete(args.storageId).catch(() => {
+        // Ignore errors during cleanup
+      });
+
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to validate PDF file");
+    }
+
     // Delete old PDF if exists
     if (resume.pdfStorageId) {
       await ctx.storage.delete(resume.pdfStorageId);

@@ -45,7 +45,12 @@ function ResumeCard({
 
     setIsDeleting(true);
     try {
-      onDelete();
+      await onDelete();
+      // Success - isDeleting will be cleared when component unmounts
+      // or by the finally block if there's an error
+    } catch (error) {
+      // Error already handled by parent handleDelete
+      // Just ensure we reset the deleting state
     } finally {
       setIsDeleting(false);
     }
@@ -107,7 +112,16 @@ export function ResumesClient() {
   const [editingResume, setEditingResume] = useState<ResumeDoc | null>(null);
 
   const handleDelete = async (resumeId: Id<"resumes">) => {
-    await deleteResume({ resumeId });
+    try {
+      await deleteResume({ resumeId });
+    } catch (error: unknown) {
+      console.error("Failed to delete resume:", error);
+      alert(
+        "Failed to delete resume. Please try again or contact support if the problem persists.",
+      );
+      // Rethrow to let the caller know deletion failed
+      throw error;
+    }
   };
 
   if (!resumes) {

@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Minus, Loader2 } from "lucide-react";
-import type { Doc } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { generateResumePDF, type ResumeData } from "@/lib/pdf-generator";
 
 type ResumeDoc = Doc<"resumes">;
@@ -51,11 +51,7 @@ interface EditResumeDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditResumeDialog({
-  resume,
-  open,
-  onOpenChange,
-}: EditResumeDialogProps) {
+export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialogProps) {
   const [formData, setFormData] = useState<ResumeFormData>({
     title: resume.title,
     fullName: resume.fields.fullName,
@@ -115,9 +111,7 @@ export function EditResumeDialog({
   const updateExperience = (index: number, field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      experience: prev.experience.map((exp, i) =>
-        i === index ? { ...exp, [field]: value } : exp
-      ),
+      experience: prev.experience.map((exp, i) => (i === index ? { ...exp, [field]: value } : exp)),
     }));
   };
 
@@ -148,9 +142,7 @@ export function EditResumeDialog({
   const updateEducation = (index: number, field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      education: prev.education.map((edu, i) =>
-        i === index ? { ...edu, [field]: value } : edu
-      ),
+      education: prev.education.map((edu, i) => (i === index ? { ...edu, [field]: value } : edu)),
     }));
   };
 
@@ -204,10 +196,10 @@ export function EditResumeDialog({
     try {
       const cleanedSkills = formData.skills.filter((s) => s.trim() !== "");
       const cleanedExperience = formData.experience.filter(
-        (exp) => exp.jobTitle && exp.company && exp.startDate
+        (exp) => exp.jobTitle && exp.company && exp.startDate,
       );
       const cleanedEducation = formData.education.filter(
-        (edu) => edu.degree && edu.institution && edu.graduationDate
+        (edu) => edu.degree && edu.institution && edu.graduationDate,
       );
 
       if (cleanedSkills.length === 0) {
@@ -281,15 +273,53 @@ export function EditResumeDialog({
 
       const pdfBlob = generateResumePDF(resumeData);
 
+      // Validate PDF blob before upload
+      const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
+      if (pdfBlob.size > MAX_PDF_SIZE) {
+        throw new Error(
+          `PDF file is too large (${(pdfBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed size is 5MB.`
+        );
+      }
+
+      if (pdfBlob.type !== "application/pdf") {
+        throw new Error("Generated file is not a valid PDF.");
+      }
+
       // Upload PDF to Convex storage
       const uploadUrl = await generateUploadUrl();
-      const uploadResult = await fetch(uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/pdf" },
-        body: pdfBlob,
-      });
 
-      const { storageId } = await uploadResult.json();
+      let storageId: Id<"_storage">;
+      try {
+        const uploadResult = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/pdf" },
+          body: pdfBlob,
+        });
+
+        if (!uploadResult.ok) {
+          const errorText = await uploadResult.text().catch(() => "Unknown error");
+          console.error(`PDF upload failed with status ${uploadResult.status}:`, errorText);
+          throw new Error(
+            `Failed to upload PDF: ${uploadResult.status} ${uploadResult.statusText}`,
+          );
+        }
+
+        const uploadData = await uploadResult.json();
+
+        if (!uploadData.storageId) {
+          console.error("Upload response missing storageId:", uploadData);
+          throw new Error("Invalid upload response: missing storageId");
+        }
+
+        storageId = uploadData.storageId as Id<"_storage">;
+      } catch (uploadError) {
+        console.error("Failed to upload PDF to storage:", uploadError);
+        throw new Error(
+          uploadError instanceof Error
+            ? `PDF upload failed: ${uploadError.message}`
+            : "Failed to upload PDF to storage",
+        );
+      }
 
       // Save storage ID to resume
       await savePdfToResume({
@@ -371,9 +401,7 @@ export function EditResumeDialog({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Location
-                </label>
+                <label className="mb-2 block text-sm font-medium">Location</label>
                 <Input
                   value={formData.location}
                   onChange={(e) => updateField("location", e.target.value)}
@@ -382,9 +410,7 @@ export function EditResumeDialog({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Website
-                </label>
+                <label className="mb-2 block text-sm font-medium">Website</label>
                 <Input
                   type="url"
                   value={formData.website}
@@ -394,9 +420,7 @@ export function EditResumeDialog({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium">
-                  LinkedIn
-                </label>
+                <label className="mb-2 block text-sm font-medium">LinkedIn</label>
                 <Input
                   value={formData.linkedin}
                   onChange={(e) => updateField("linkedin", e.target.value)}
@@ -415,11 +439,9 @@ export function EditResumeDialog({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
-                Professional Summary
-              </label>
+              <label className="mb-2 block text-sm font-medium">Professional Summary</label>
               <textarea
-                className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.summary}
                 onChange={(e) => updateField("summary", e.target.value)}
                 placeholder="Brief summary of your professional background and goals..."
@@ -440,9 +462,7 @@ export function EditResumeDialog({
             {formData.experience.map((exp, index) => (
               <div key={index} className="space-y-3 rounded border p-3">
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium">
-                    Experience {index + 1}
-                  </span>
+                  <span className="text-sm font-medium">Experience {index + 1}</span>
                   {formData.experience.length > 1 && (
                     <Button
                       type="button"
@@ -460,9 +480,7 @@ export function EditResumeDialog({
                     <Input
                       required
                       value={exp.jobTitle}
-                      onChange={(e) =>
-                        updateExperience(index, "jobTitle", e.target.value)
-                      }
+                      onChange={(e) => updateExperience(index, "jobTitle", e.target.value)}
                       placeholder="Job Title"
                     />
                   </div>
@@ -470,18 +488,14 @@ export function EditResumeDialog({
                     <Input
                       required
                       value={exp.company}
-                      onChange={(e) =>
-                        updateExperience(index, "company", e.target.value)
-                      }
+                      onChange={(e) => updateExperience(index, "company", e.target.value)}
                       placeholder="Company"
                     />
                   </div>
                   <div>
                     <Input
                       value={exp.location}
-                      onChange={(e) =>
-                        updateExperience(index, "location", e.target.value)
-                      }
+                      onChange={(e) => updateExperience(index, "location", e.target.value)}
                       placeholder="Location"
                     />
                   </div>
@@ -490,9 +504,7 @@ export function EditResumeDialog({
                       required
                       type="month"
                       value={exp.startDate}
-                      onChange={(e) =>
-                        updateExperience(index, "startDate", e.target.value)
-                      }
+                      onChange={(e) => updateExperience(index, "startDate", e.target.value)}
                       placeholder="Start Date"
                     />
                   </div>
@@ -500,20 +512,16 @@ export function EditResumeDialog({
                     <Input
                       type="month"
                       value={exp.endDate}
-                      onChange={(e) =>
-                        updateExperience(index, "endDate", e.target.value)
-                      }
+                      onChange={(e) => updateExperience(index, "endDate", e.target.value)}
                       placeholder="End Date (leave empty for current)"
                     />
                   </div>
                 </div>
                 <textarea
                   required
-                  className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                   value={exp.description}
-                  onChange={(e) =>
-                    updateExperience(index, "description", e.target.value)
-                  }
+                  onChange={(e) => updateExperience(index, "description", e.target.value)}
                   placeholder="Describe your responsibilities and achievements..."
                 />
               </div>
@@ -533,9 +541,7 @@ export function EditResumeDialog({
             {formData.education.map((edu, index) => (
               <div key={index} className="space-y-3 rounded border p-3">
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium">
-                    Education {index + 1}
-                  </span>
+                  <span className="text-sm font-medium">Education {index + 1}</span>
                   {formData.education.length > 1 && (
                     <Button
                       type="button"
@@ -553,9 +559,7 @@ export function EditResumeDialog({
                     <Input
                       required
                       value={edu.degree}
-                      onChange={(e) =>
-                        updateEducation(index, "degree", e.target.value)
-                      }
+                      onChange={(e) => updateEducation(index, "degree", e.target.value)}
                       placeholder="Degree (e.g., Bachelor of Science in CS)"
                     />
                   </div>
@@ -563,18 +567,14 @@ export function EditResumeDialog({
                     <Input
                       required
                       value={edu.institution}
-                      onChange={(e) =>
-                        updateEducation(index, "institution", e.target.value)
-                      }
+                      onChange={(e) => updateEducation(index, "institution", e.target.value)}
                       placeholder="Institution"
                     />
                   </div>
                   <div>
                     <Input
                       value={edu.location}
-                      onChange={(e) =>
-                        updateEducation(index, "location", e.target.value)
-                      }
+                      onChange={(e) => updateEducation(index, "location", e.target.value)}
                       placeholder="Location"
                     />
                   </div>
@@ -583,9 +583,7 @@ export function EditResumeDialog({
                       required
                       type="month"
                       value={edu.graduationDate}
-                      onChange={(e) =>
-                        updateEducation(index, "graduationDate", e.target.value)
-                      }
+                      onChange={(e) => updateEducation(index, "graduationDate", e.target.value)}
                       placeholder="Graduation Date"
                     />
                   </div>

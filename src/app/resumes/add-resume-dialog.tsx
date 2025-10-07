@@ -15,6 +15,8 @@ import {
 import { Plus, Minus, Loader2 } from "lucide-react";
 import { generateResumePDF, type ResumeData } from "@/lib/pdf-generator";
 
+import type { Id } from "../../../convex/_generated/dataModel";
+
 interface ResumeFormData {
   title: string;
   fullName: string;
@@ -191,7 +193,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
 
       // Filter out incomplete experience entries
       const cleanedExperience = formData.experience.filter(
-        (exp) => exp.jobTitle && exp.company && exp.startDate,
+        (exp) => exp.jobTitle && exp.company && exp.startDate && exp.description,
       );
 
       // Filter out incomplete education entries
@@ -270,15 +272,53 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
 
       const pdfBlob = generateResumePDF(resumeData);
 
+      // Validate PDF blob before upload
+      const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
+      if (pdfBlob.size > MAX_PDF_SIZE) {
+        throw new Error(
+          `PDF file is too large (${(pdfBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed size is 5MB.`,
+        );
+      }
+
+      if (pdfBlob.type !== "application/pdf") {
+        throw new Error("Generated file is not a valid PDF.");
+      }
+
       // Upload PDF to Convex storage
       const uploadUrl = await generateUploadUrl();
-      const uploadResult = await fetch(uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/pdf" },
-        body: pdfBlob,
-      });
 
-      const { storageId } = await uploadResult.json();
+      let storageId: Id<"_storage">;
+      try {
+        const uploadResult = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/pdf" },
+          body: pdfBlob,
+        });
+
+        if (!uploadResult.ok) {
+          const errorText = await uploadResult.text().catch(() => "Unknown error");
+          console.error(`PDF upload failed with status ${uploadResult.status}:`, errorText);
+          throw new Error(
+            `Failed to upload PDF: ${uploadResult.status} ${uploadResult.statusText}`,
+          );
+        }
+
+        const uploadData = await uploadResult.json();
+
+        if (!uploadData.storageId) {
+          console.error("Upload response missing storageId:", uploadData);
+          throw new Error("Invalid upload response: missing storageId");
+        }
+
+        storageId = uploadData.storageId as Id<"_storage">;
+      } catch (uploadError) {
+        console.error("Failed to upload PDF to storage:", uploadError);
+        throw new Error(
+          uploadError instanceof Error
+            ? `PDF upload failed: ${uploadError.message}`
+            : "Failed to upload PDF to storage",
+        );
+      }
 
       // Save storage ID to resume
       await savePdfToResume({

@@ -134,12 +134,69 @@ The generator intelligently checks available space and stops adding content if t
 PDFs are stored using Convex's built-in file storage:
 
 1. Generate PDF blob on client using `jspdf`
-2. Request upload URL from Convex (`generateUploadUrl`)
-3. Upload blob to Convex storage
-4. Save storage ID to resume document (`savePdfToResume`)
-5. Retrieve download URL when needed (`getResumePdfUrl`)
+2. **Validate blob on client** (size < 5MB, type = application/pdf)
+3. Request upload URL from Convex (`generateUploadUrl`)
+4. Upload blob to Convex storage
+5. **Server-side validation** in `savePdfToResume`:
+   - Download and inspect file content
+   - Verify Content-Type header is `application/pdf`
+   - Check PDF magic numbers (file signature: `%PDF-`)
+   - Verify PDF end marker (`%%EOF`)
+   - Validate file size (max 5MB)
+   - Automatically delete invalid files
+   - Verify authentication and ownership
+6. Save storage ID to resume document
+7. Retrieve download URL when needed (`getResumePdfUrl`)
 
 When a resume is deleted, the associated PDF file is automatically deleted from storage.
+
+### Security Features
+
+**Client-side validation:**
+
+- Maximum file size: 5MB
+- MIME type check: application/pdf only
+- Provides immediate user feedback
+- **⚠️ Not a security boundary**: Can be bypassed by attackers (browser DevTools, direct API calls, intercepted upload URLs)
+- **Purpose**: UX optimization only - prevents accidental mistakes, reduces unnecessary uploads
+- **Security note**: Never rely solely on client-side validation; always enforce checks server-side
+
+**Server-side validation (production-grade):**
+
+- **Content-Type verification**: Checks HTTP header
+- **Magic number validation**: Verifies PDF file signature (`%PDF-`)
+- **EOF marker check**: Ensures proper PDF structure
+- **File size enforcement**: Rejects files over 5MB
+- **Automatic cleanup**: Deletes invalid/malicious files immediately
+- **Authentication**: All operations require valid user session
+- **Ownership verification**: Users can only access their own files
+
+**Built-in Convex protections:**
+
+- Upload URLs are single-use and time-limited
+- `generateUploadUrl` requires authentication
+- File storage is isolated per deployment
+- Files are only accessible by authenticated users
+
+**Security Model:**
+
+The system uses **defense in depth** with multiple layers of protection:
+
+1. **Controlled Generation**: PDFs are primarily generated client-side via `jspdf` from validated form data
+2. **Client Validation**: Fast feedback prevents accidental issues
+3. **Server Validation**: **Cannot be bypassed** - validates actual file content using magic numbers
+4. **Quota Limits**: Maximum 5 resumes × 5MB per user
+5. **Access Control**: Files tied to authenticated user accounts with ownership checks
+
+**Attack Mitigation:**
+
+Even if a malicious actor intercepts an upload URL and attempts to upload non-PDF or malicious content:
+
+- ✅ Server validates PDF file signature (magic numbers)
+- ✅ Server checks PDF structure (EOF marker)
+- ✅ Invalid files are automatically deleted
+- ✅ Error is logged and user is notified
+- ✅ No impact on other users or system stability
 
 ## User Limits
 
