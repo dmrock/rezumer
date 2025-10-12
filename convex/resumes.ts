@@ -1,5 +1,6 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
 
 const MAX_RESUMES = 5;
 
@@ -267,7 +268,8 @@ export const generateUploadUrl = mutation({
   },
 });
 
-export const savePdfToResume = mutation({
+// Internal mutation to save PDF after validation (called from action)
+export const internalSavePdfToResume = mutation({
   args: {
     resumeId: v.id("resumes"),
     storageId: v.id("_storage"),
@@ -291,15 +293,38 @@ export const savePdfToResume = mutation({
       throw new Error("Forbidden");
     }
 
-    // Verify file exists and validate it's a legitimate PDF
+    // Delete old PDF if exists
+    if (resume.pdfStorageId) {
+      await ctx.storage.delete(resume.pdfStorageId);
+    }
+
+    // Save new PDF storage ID
+    await ctx.db.patch(args.resumeId, {
+      pdfStorageId: args.storageId,
+      updatedAt: new Date().toISOString(),
+    });
+  },
+});
+
+// Action to validate PDF and save to resume (uses fetch, so must be an action)
+export const savePdfToResume = action({
+  args: {
+    resumeId: v.id("resumes"),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    // Get file URL from storage
     const fileUrl = await ctx.storage.getUrl(args.storageId);
     if (!fileUrl) {
       throw new Error("Invalid storage ID: file not found");
     }
 
-    // Download the file content to validate PDF magic numbers
-    let isValidPdf = false;
+    // Validate PDF content (requires fetch, so must be in action)
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    let isValidPdf = false;
 
     try {
       const response = await fetch(fileUrl);
@@ -314,7 +339,7 @@ export const savePdfToResume = mutation({
         throw new Error(`Invalid content type: ${contentType}. Only PDF files are allowed.`);
       }
 
-      // Read first chunk to check magic numbers and file size
+      // Read file to check magic numbers and file size
       const buffer = await response.arrayBuffer();
       const bytes = new Uint8Array(buffer);
 
@@ -364,15 +389,10 @@ export const savePdfToResume = mutation({
       throw new Error("Failed to validate PDF file");
     }
 
-    // Delete old PDF if exists
-    if (resume.pdfStorageId) {
-      await ctx.storage.delete(resume.pdfStorageId);
-    }
-
-    // Save new PDF storage ID
-    await ctx.db.patch(args.resumeId, {
-      pdfStorageId: args.storageId,
-      updatedAt: new Date().toISOString(),
+    // If validation passed, save the PDF to resume via internal mutation
+    await ctx.runMutation(api.resumes.internalSavePdfToResume, {
+      resumeId: args.resumeId,
+      storageId: args.storageId,
     });
   },
 });

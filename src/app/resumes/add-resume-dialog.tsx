@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +96,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createResume = useMutation(api.resumes.createResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
-  const savePdfToResume = useMutation(api.resumes.savePdfToResume);
+  const savePdfToResume = useAction(api.resumes.savePdfToResume);
 
   const updateField = (field: keyof ResumeFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -219,35 +219,8 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
         return;
       }
 
-      const resumeId = await createResume({
-        title: formData.title,
-        designTemplate: "modern",
-        fields: {
-          fullName: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          location: formData.location || undefined,
-          website: formData.website || undefined,
-          linkedin: formData.linkedin || undefined,
-          github: formData.github || undefined,
-          summary: formData.summary || undefined,
-          experience: cleanedExperience.map((exp) => ({
-            ...exp,
-            location: exp.location || undefined,
-            endDate: exp.endDate || undefined,
-          })),
-          education: cleanedEducation.map((edu) => ({
-            ...edu,
-            location: edu.location || undefined,
-          })),
-          skills: cleanedSkills,
-          languages: formData.languages.length > 0 ? formData.languages : undefined,
-          certifications: formData.certifications.length > 0 ? formData.certifications : undefined,
-        },
-      });
-
-      // Generate PDF
-      const resumeData: ResumeData = {
+      // Prepare resume fields for both PDF generation and database
+      const resumeFields = {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
@@ -270,9 +243,10 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
         certifications: formData.certifications.length > 0 ? formData.certifications : undefined,
       };
 
-      const pdfBlob = generateResumePDF(resumeData);
+      // Step 1: Generate PDF first (before creating resume record)
+      const pdfBlob = generateResumePDF(resumeFields);
 
-      // Validate PDF blob before upload
+      // Step 2: Validate PDF blob before upload
       const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
       if (pdfBlob.size > MAX_PDF_SIZE) {
         throw new Error(
@@ -284,7 +258,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
         throw new Error("Generated file is not a valid PDF.");
       }
 
-      // Upload PDF to Convex storage
+      // Step 3: Upload PDF to Convex storage
       const uploadUrl = await generateUploadUrl();
 
       let storageId: Id<"_storage">;
@@ -320,7 +294,14 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
         );
       }
 
-      // Save storage ID to resume
+      // Step 4: Create resume record only after PDF is successfully uploaded
+      const resumeId = await createResume({
+        title: formData.title,
+        designTemplate: "modern",
+        fields: resumeFields,
+      });
+
+      // Step 5: Link the uploaded PDF to the resume
       await savePdfToResume({
         resumeId,
         storageId,

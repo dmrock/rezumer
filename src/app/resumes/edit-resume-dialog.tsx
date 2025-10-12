@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,7 +77,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const updateResume = useMutation(api.resumes.updateResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
-  const savePdfToResume = useMutation(api.resumes.savePdfToResume);
+  const savePdfToResume = useAction(api.resumes.savePdfToResume);
 
   // Update form data when resume changes
   useEffect(() => {
@@ -277,7 +277,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
       const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
       if (pdfBlob.size > MAX_PDF_SIZE) {
         throw new Error(
-          `PDF file is too large (${(pdfBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed size is 5MB.`
+          `PDF file is too large (${(pdfBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum allowed size is 5MB.`,
         );
       }
 

@@ -15,7 +15,7 @@ Data access: Only through Convex generated API (`convex/_generated`). No ad‑ho
 
 ## Backend Patterns
 
-Always: get identity → look up user via `by_clerkId` → enforce ownership (`Forbidden`). Validate stage against `STAGES` (applications) or template against `DESIGN_TEMPLATES` (resumes). Limit queries with `.take()` when enforcing caps. For optional numeric removal use a `clearX` flag (see `updateApplication`). File storage: use Convex built-in storage (`_storage` table) with server-side validation (magic numbers, size, Content-Type) in `savePdfToResume`.
+Always: get identity → look up user via `by_clerkId` → enforce ownership (`Forbidden`). Validate stage against `STAGES` (applications) or template against `DESIGN_TEMPLATES` (resumes). Limit queries with `.take()` when enforcing caps. For optional numeric removal use a `clearX` flag (see `updateApplication`). File storage: use Convex built-in storage (`_storage` table) with server-side validation (magic numbers, size, Content-Type) in `savePdfToResume` action (note: validation requires `fetch()`, so must be an action, not mutation).
 
 ## Frontend Patterns
 
