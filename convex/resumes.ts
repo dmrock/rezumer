@@ -293,16 +293,19 @@ export const internalSavePdfToResume = mutation({
       throw new Error("Forbidden");
     }
 
-    // Delete old PDF if exists
-    if (resume.pdfStorageId) {
-      await ctx.storage.delete(resume.pdfStorageId);
-    }
+    // Save new PDF storage ID first (before deleting old PDF)
+    // This ensures we don't lose the old PDF if the patch operation fails
+    const oldPdfStorageId = resume.pdfStorageId;
 
-    // Save new PDF storage ID
     await ctx.db.patch(args.resumeId, {
       pdfStorageId: args.storageId,
       updatedAt: new Date().toISOString(),
     });
+
+    // Delete old PDF only after new PDF is successfully linked
+    if (oldPdfStorageId) {
+      await ctx.storage.delete(oldPdfStorageId);
+    }
   },
 });
 

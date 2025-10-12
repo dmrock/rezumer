@@ -296,17 +296,18 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
         );
       }
 
-      // Step 4: Update resume metadata only after PDF is successfully uploaded
+      // Step 4: Validate and link PDF first (before updating metadata)
+      // This ensures metadata is only updated if PDF validation succeeds
+      await savePdfToResume({
+        resumeId: resume._id,
+        storageId,
+      });
+
+      // Step 5: Update resume metadata only after PDF is successfully validated and linked
       await updateResume({
         resumeId: resume._id,
         title: formData.title,
         fields: resumeFields,
-      });
-
-      // Step 5: Link the uploaded PDF to the resume
-      await savePdfToResume({
-        resumeId: resume._id,
-        storageId,
       });
 
       onOpenChange(false);
