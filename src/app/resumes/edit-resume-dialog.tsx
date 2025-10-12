@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Minus, Loader2 } from "lucide-react";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { generateResumePDF, type ResumeData } from "@/lib/pdf-generator";
+import { generateResumePDF } from "@/lib/pdf-generator";
 
 type ResumeDoc = Doc<"resumes">;
 
@@ -220,35 +220,8 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
         return;
       }
 
-      await updateResume({
-        resumeId: resume._id,
-        title: formData.title,
-        fields: {
-          fullName: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          location: formData.location || undefined,
-          website: formData.website || undefined,
-          linkedin: formData.linkedin || undefined,
-          github: formData.github || undefined,
-          summary: formData.summary || undefined,
-          experience: cleanedExperience.map((exp) => ({
-            ...exp,
-            location: exp.location || undefined,
-            endDate: exp.endDate || undefined,
-          })),
-          education: cleanedEducation.map((edu) => ({
-            ...edu,
-            location: edu.location || undefined,
-          })),
-          skills: cleanedSkills,
-          languages: resume.fields.languages,
-          certifications: resume.fields.certifications,
-        },
-      });
-
-      // Regenerate PDF
-      const resumeData: ResumeData = {
+      // Prepare resume fields for both PDF generation and database
+      const resumeFields = {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
@@ -271,9 +244,11 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
         certifications: resume.fields.certifications,
       };
 
-      const pdfBlob = generateResumePDF(resumeData);
+      // Step 1: Generate PDF first (before updating resume record)
+      const pdfBlob = generateResumePDF(resumeFields);
 
-      // Validate PDF blob before upload
+      // Step 2: Client-side validation (UX optimization - provides immediate feedback)
+      // Note: Server-side validation in savePdfToResume is the authoritative check
       const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
       if (pdfBlob.size > MAX_PDF_SIZE) {
         throw new Error(
@@ -285,7 +260,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
         throw new Error("Generated file is not a valid PDF.");
       }
 
-      // Upload PDF to Convex storage
+      // Step 3: Upload PDF to Convex storage
       const uploadUrl = await generateUploadUrl();
 
       let storageId: Id<"_storage">;
@@ -321,7 +296,14 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
         );
       }
 
-      // Save storage ID to resume
+      // Step 4: Update resume metadata only after PDF is successfully uploaded
+      await updateResume({
+        resumeId: resume._id,
+        title: formData.title,
+        fields: resumeFields,
+      });
+
+      // Step 5: Link the uploaded PDF to the resume
       await savePdfToResume({
         resumeId: resume._id,
         storageId,

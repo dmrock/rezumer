@@ -246,7 +246,8 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
       // Step 1: Generate PDF first (before creating resume record)
       const pdfBlob = generateResumePDF(resumeFields);
 
-      // Step 2: Validate PDF blob before upload
+      // Step 2: Client-side validation (UX optimization - provides immediate feedback)
+      // Note: Server-side validation in savePdfToResume is the authoritative check
       const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
       if (pdfBlob.size > MAX_PDF_SIZE) {
         throw new Error(

@@ -378,15 +378,24 @@ export const savePdfToResume = action({
         );
       }
     } catch (error) {
-      // If validation fails, delete the file
-      await ctx.storage.delete(args.storageId).catch(() => {
-        // Ignore errors during cleanup
-      });
+      // If validation fails, attempt to delete the file
+      // Log but don't mask the original error if cleanup fails
+      try {
+        await ctx.storage.delete(args.storageId);
+      } catch (cleanupError) {
+        console.error("Failed to delete invalid file during cleanup:", {
+          storageId: args.storageId,
+          cleanupError: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+          originalError: error instanceof Error ? error.message : String(error),
+        });
+      }
 
+      // Preserve original error context
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to validate PDF file");
+      // If error is not an Error instance, preserve its information
+      throw new Error(`Failed to validate PDF file: ${String(error)}`);
     }
 
     // If validation passed, save the PDF to resume via internal mutation
