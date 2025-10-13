@@ -11,11 +11,11 @@ Data access: Only through Convex generated API (`convex/_generated`). No ad‑ho
 
 ## Data Model
 
-`users` (indexed by `clerkId`). `applications` (indexed by `userId`). Stages enumerated in `convex/applications.ts` (`STAGES`). Per-user application cap: 200 (`createApplication` throws `APPLICATION_LIMIT_REACHED`).
+`users` (indexed by `clerkId`). `applications` (indexed by `userId`). `resumes` (indexed by `userId`). Stages enumerated in `convex/applications.ts` (`STAGES`). Design templates in `convex/resumes.ts` (`DESIGN_TEMPLATES`). Per-user caps: 200 applications (`APPLICATION_LIMIT_REACHED`), 5 resumes (`RESUME_LIMIT_REACHED`).
 
 ## Backend Patterns
 
-Always: get identity → look up user via `by_clerkId` → enforce ownership (`Forbidden`). Validate stage against `STAGES`. Limit queries with `.take()` when enforcing caps. For optional numeric removal use a `clearX` flag (see `updateApplication`).
+Always: get identity → look up user via `by_clerkId` → enforce ownership (`Forbidden`). Validate stage against `STAGES` (applications) or template against `DESIGN_TEMPLATES` (resumes). Limit queries with `.take()` when enforcing caps. For optional numeric removal use a `clearX` flag (see `updateApplication`). File storage: use Convex built-in storage (`_storage` table) with server-side validation (magic numbers, size, Content-Type) in `savePdfToResume` action (note: validation requires `fetch()`, so must be an action, not mutation).
 
 ## Frontend Patterns
 
@@ -35,7 +35,7 @@ Install: `pnpm install`. Dev: run both `pnpm convex:dev` and `pnpm dev`. Build: 
 
 ## Error Handling
 
-Unauthed query: return `[]`. Unauthed mutation: throw `Not authenticated`. Ownership violation: `Forbidden`. Limit hit: `APPLICATION_LIMIT_REACHED` (frontend branches on `error.message`).
+Unauthed query: return `[]`. Unauthed mutation: throw `Not authenticated`. Ownership violation: `Forbidden`. Limit hit: `APPLICATION_LIMIT_REACHED` or `RESUME_LIMIT_REACHED` (frontend branches on `error.message`). File validation failure: delete file immediately, throw descriptive error.
 
 ## Performance
 
@@ -43,7 +43,7 @@ Never scan unindexed fields. Always create an index before adding a filter patte
 
 ## Out of Scope Now
 
-Testing infra, large state managers, PDF resume export—keep stubs lightweight and clearly labeled.
+Testing infra, large state managers—keep stubs lightweight and clearly labeled.
 
 ## When Unsure
 
