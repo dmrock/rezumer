@@ -1,21 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { useMutation, useAction } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import React, { useState, useEffect } from "react";
+import { useMutation, useAction, useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Plus, Minus, Loader2 } from "lucide-react";
-import { generateResumePDF, type ResumeData } from "@/lib/pdf-generator";
-
-import type { Id } from "../../../convex/_generated/dataModel";
+import { Plus, Minus, Loader2, ArrowLeft } from "lucide-react";
+import { generateResumePDF } from "@/lib/pdf-generator";
+import { useRouter, useParams } from "next/navigation";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 interface ResumeFormData {
   title: string;
@@ -42,161 +35,199 @@ interface ResumeFormData {
     graduationDate: string;
   }>;
   skills: string[];
-  languages: Array<{
-    language: string;
-    proficiency: string;
-  }>;
-  certifications: Array<{
-    name: string;
-    issuer: string;
-    date: string;
-  }>;
 }
 
-const initialFormData: ResumeFormData = {
-  title: "",
-  fullName: "",
-  email: "",
-  phone: "",
-  location: "",
-  website: "",
-  linkedin: "",
-  github: "",
-  summary: "",
-  experience: [
-    {
-      jobTitle: "",
-      company: "",
-      location: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-    },
-  ],
-  education: [
-    {
-      degree: "",
-      institution: "",
-      location: "",
-      graduationDate: "",
-    },
-  ],
-  skills: [""],
-  languages: [],
-  certifications: [],
-};
+export default function EditResumePage() {
+  const router = useRouter();
+  const params = useParams();
+  const resumeId = params.resumeId as Id<"resumes">;
 
-interface AddResumeDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
-  const [formData, setFormData] = useState<ResumeFormData>(initialFormData);
+  const resume = useQuery(api.resumes.getResumeById, { resumeId });
+  const [formData, setFormData] = useState<ResumeFormData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const createResume = useMutation(api.resumes.createResume);
+  const updateResume = useMutation(api.resumes.updateResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
   const savePdfToResume = useAction(api.resumes.savePdfToResume);
 
+  // Initialize form data when resume is loaded
+  useEffect(() => {
+    if (resume) {
+      setFormData({
+        title: resume.title,
+        fullName: resume.fields.fullName,
+        email: resume.fields.email,
+        phone: resume.fields.phone,
+        location: resume.fields.location || "",
+        website: resume.fields.website || "",
+        linkedin: resume.fields.linkedin || "",
+        github: resume.fields.github || "",
+        summary: resume.fields.summary || "",
+        experience: resume.fields.experience.map(
+          (exp: {
+            jobTitle: string;
+            company: string;
+            location?: string;
+            startDate: string;
+            endDate?: string;
+            description: string;
+          }) => ({
+            ...exp,
+            location: exp.location || "",
+            endDate: exp.endDate || "",
+          }),
+        ),
+        education: resume.fields.education.map(
+          (edu: {
+            degree: string;
+            institution: string;
+            location?: string;
+            graduationDate: string;
+          }) => ({
+            ...edu,
+            location: edu.location || "",
+          }),
+        ),
+        skills: resume.fields.skills,
+      });
+    }
+  }, [resume]);
+
   const updateField = (field: keyof ResumeFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
   const updateExperience = (index: number, field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((exp, i) => (i === index ? { ...exp, [field]: value } : exp)),
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            experience: prev.experience.map((exp, i) =>
+              i === index ? { ...exp, [field]: value } : exp,
+            ),
+          }
+        : null,
+    );
   };
 
   const addExperience = () => {
-    setFormData((prev) => ({
-      ...prev,
-      experience: [
-        ...prev.experience,
-        {
-          jobTitle: "",
-          company: "",
-          location: "",
-          startDate: "",
-          endDate: "",
-          description: "",
-        },
-      ],
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            experience: [
+              ...prev.experience,
+              {
+                jobTitle: "",
+                company: "",
+                location: "",
+                startDate: "",
+                endDate: "",
+                description: "",
+              },
+            ],
+          }
+        : null,
+    );
   };
 
   const removeExperience = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      experience: prev.experience.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            experience: prev.experience.filter((_, i) => i !== index),
+          }
+        : null,
+    );
   };
 
   const updateEducation = (index: number, field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu, i) => (i === index ? { ...edu, [field]: value } : edu)),
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            education: prev.education.map((edu, i) =>
+              i === index ? { ...edu, [field]: value } : edu,
+            ),
+          }
+        : null,
+    );
   };
 
   const addEducation = () => {
-    setFormData((prev) => ({
-      ...prev,
-      education: [
-        ...prev.education,
-        {
-          degree: "",
-          institution: "",
-          location: "",
-          graduationDate: "",
-        },
-      ],
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            education: [
+              ...prev.education,
+              {
+                degree: "",
+                institution: "",
+                location: "",
+                graduationDate: "",
+              },
+            ],
+          }
+        : null,
+    );
   };
 
   const removeEducation = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      education: prev.education.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            education: prev.education.filter((_, i) => i !== index),
+          }
+        : null,
+    );
   };
 
   const updateSkill = (index: number, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: prev.skills.map((skill, i) => (i === index ? value : skill)),
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            skills: prev.skills.map((skill, i) => (i === index ? value : skill)),
+          }
+        : null,
+    );
   };
 
   const addSkill = () => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: [...prev.skills, ""],
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            skills: [...prev.skills, ""],
+          }
+        : null,
+    );
   };
 
   const removeSkill = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: prev.skills.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            skills: prev.skills.filter((_, i) => i !== index),
+          }
+        : null,
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData || !resume) return;
+
     setIsSubmitting(true);
 
     try {
-      // Filter out empty skills
       const cleanedSkills = formData.skills.filter((s) => s.trim() !== "");
-
-      // Filter out incomplete experience entries
       const cleanedExperience = formData.experience.filter(
-        (exp) => exp.jobTitle && exp.company && exp.startDate && exp.description,
+        (exp) => exp.jobTitle && exp.company && exp.startDate,
       );
-
-      // Filter out incomplete education entries
       const cleanedEducation = formData.education.filter(
         (edu) => edu.degree && edu.institution && edu.graduationDate,
       );
@@ -239,11 +270,11 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
           location: edu.location || undefined,
         })),
         skills: cleanedSkills,
-        languages: formData.languages.length > 0 ? formData.languages : undefined,
-        certifications: formData.certifications.length > 0 ? formData.certifications : undefined,
+        languages: resume.fields.languages,
+        certifications: resume.fields.certifications,
       };
 
-      // Step 1: Generate PDF first (before creating resume record)
+      // Step 1: Generate PDF first (before updating resume record)
       const pdfBlob = generateResumePDF(resumeFields);
 
       // Step 2: Client-side validation (UX optimization - provides immediate feedback)
@@ -295,50 +326,60 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
         );
       }
 
-      // Step 4: Create resume record only after PDF is successfully uploaded
-      const resumeId = await createResume({
-        title: formData.title,
-        designTemplate: "modern",
-        fields: resumeFields,
-      });
-
-      // Step 5: Link the uploaded PDF to the resume
+      // Step 4: Validate and link PDF first (before updating metadata)
+      // This ensures metadata is only updated if PDF validation succeeds
       await savePdfToResume({
-        resumeId,
+        resumeId: resume._id,
         storageId,
       });
 
-      setFormData(initialFormData);
-      onOpenChange(false);
-    } catch (error: unknown) {
-      if (error instanceof Error && error.message === "RESUME_LIMIT_REACHED") {
-        alert(
-          "You have reached the maximum of 5 resumes. Please delete a resume before creating a new one.",
-        );
-      } else {
-        console.error("Failed to create resume:", error);
-        alert("Failed to create resume. Please try again.");
-      }
+      // Step 5: Update resume metadata only after PDF is successfully validated and linked
+      await updateResume({
+        resumeId: resume._id,
+        title: formData.title,
+        fields: resumeFields,
+      });
+
+      router.push("/resumes");
+    } catch (error) {
+      console.error("Failed to update resume:", error);
+      alert("Failed to update resume. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData(initialFormData);
-    onOpenChange(false);
+    router.push("/resumes");
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Resume</DialogTitle>
-        </DialogHeader>
+  if (!resume || !formData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+          <p className="text-muted-foreground text-lg">Loading resume...</p>
+        </div>
+      </div>
+    );
+  }
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+  return (
+    <div className="p-6">
+      <div className="mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="mb-6">
+          <Button variant="ghost" onClick={handleCancel} disabled={isSubmitting} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Resumes
+          </Button>
+          <h1 className="text-3xl font-bold">Edit Resume</h1>
+          <p className="text-muted-foreground mt-2">Update your resume information below</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Resume Title */}
-          <div>
+          <div className="bg-card rounded-lg border p-6">
             <label className="mb-2 block text-sm font-medium">
               Resume Title <span className="text-destructive">*</span>
             </label>
@@ -351,8 +392,8 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
           </div>
 
           {/* Personal Information */}
-          <div className="space-y-4 rounded-lg border p-4">
-            <h3 className="text-lg font-semibold">Personal Information</h3>
+          <div className="bg-card space-y-4 rounded-lg border p-6">
+            <h3 className="text-xl font-semibold">Personal Information</h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -434,7 +475,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
             <div>
               <label className="mb-2 block text-sm font-medium">Professional Summary</label>
               <textarea
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.summary}
                 onChange={(e) => updateField("summary", e.target.value)}
                 placeholder="Brief summary of your professional background and goals..."
@@ -443,9 +484,9 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
           </div>
 
           {/* Work Experience */}
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Work Experience</h3>
+              <h3 className="text-xl font-semibold">Work Experience</h3>
               <Button type="button" size="sm" onClick={addExperience}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
@@ -453,7 +494,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
             </div>
 
             {formData.experience.map((exp, index) => (
-              <div key={index} className="space-y-3 rounded border p-3">
+              <div key={index} className="bg-background space-y-3 rounded border p-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Experience {index + 1}</span>
                   {formData.experience.length > 1 && (
@@ -512,7 +553,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
                 </div>
                 <textarea
                   required
-                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                   value={exp.description}
                   onChange={(e) => updateExperience(index, "description", e.target.value)}
                   placeholder="Describe your responsibilities and achievements..."
@@ -522,9 +563,9 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
           </div>
 
           {/* Education */}
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Education</h3>
+              <h3 className="text-xl font-semibold">Education</h3>
               <Button type="button" size="sm" onClick={addEducation}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
@@ -532,7 +573,7 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
             </div>
 
             {formData.education.map((edu, index) => (
-              <div key={index} className="space-y-3 rounded border p-3">
+              <div key={index} className="bg-background space-y-3 rounded border p-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Education {index + 1}</span>
                   {formData.education.length > 1 && (
@@ -586,16 +627,16 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
           </div>
 
           {/* Skills */}
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Skills</h3>
+              <h3 className="text-xl font-semibold">Skills</h3>
               <Button type="button" size="sm" onClick={addSkill}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
               </Button>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
               {formData.skills.map((skill, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
@@ -619,23 +660,30 @@ export function AddResumeDialog({ open, onOpenChange }: AddResumeDialogProps) {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          {/* Action Buttons */}
+          <div className="bg-card flex justify-end gap-4 rounded-lg border p-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              size="lg"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} size="lg">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Updating...
                 </>
               ) : (
-                "Create Resume"
+                "Update Resume"
               )}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
