@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ResumesClient } from "./resumes-client";
+import { AddResumeHeaderButton } from "./add-resume-header-button";
 
 export default async function ResumesPage() {
   const { userId } = await auth();
@@ -16,6 +17,7 @@ export default async function ResumesPage() {
         <PageHeader
           title="Resumes"
           description="Create and manage your professional resumes with ease."
+          action={<AddResumeHeaderButton />}
         />
 
         <ResumesClient />

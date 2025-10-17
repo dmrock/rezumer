@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { Download, Pencil, Trash2, Plus, FileText } from "lucide-react";
+import { Download, Pencil, Trash2, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { AddResumeDialog } from "./add-resume-dialog";
-import { EditResumeDialog } from "./edit-resume-dialog";
 
 type ResumeDoc = Doc<"resumes">;
 
@@ -106,10 +105,9 @@ function ResumeCard({
 }
 
 export function ResumesClient() {
+  const router = useRouter();
   const resumes = useQuery(api.resumes.listResumes) as ResumeDoc[] | undefined;
   const deleteResume = useMutation(api.resumes.deleteResume);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingResume, setEditingResume] = useState<ResumeDoc | null>(null);
 
   const handleDelete = async (resumeId: Id<"resumes">) => {
     try {
@@ -141,7 +139,7 @@ export function ResumesClient() {
             <ResumeCard
               key={resume._id}
               resume={resume}
-              onEdit={() => setEditingResume(resume)}
+              onEdit={() => router.push(`/resumes/${resume._id}/edit`)}
               onDelete={() => handleDelete(resume._id)}
             />
           ))}
@@ -152,27 +150,9 @@ export function ResumesClient() {
             <FileText className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
             <h3 className="mb-2 text-lg font-semibold">No resumes yet</h3>
             <p className="text-muted-foreground mb-4 text-sm">
-              Create your first resume to get started
+              Create your first resume using the &quot;Add Resume&quot; button above
             </p>
-            <Button onClick={() => setIsAddDialogOpen(true)} className="cursor-pointer">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Resume
-            </Button>
           </div>
-        </div>
-      )}
-
-      {/* Add Resume Button (when resumes exist) */}
-      {resumes.length > 0 && resumes.length < 5 && (
-        <div className="flex justify-center">
-          <Button
-            size="lg"
-            onClick={() => setIsAddDialogOpen(true)}
-            className="min-w-[200px] cursor-pointer"
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Create New Resume
-          </Button>
         </div>
       )}
 
@@ -184,17 +164,6 @@ export function ResumesClient() {
             one.
           </p>
         </div>
-      )}
-
-      {/* Dialogs */}
-      <AddResumeDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
-
-      {editingResume && (
-        <EditResumeDialog
-          resume={editingResume}
-          open={!!editingResume}
-          onOpenChange={(open: boolean) => !open && setEditingResume(null)}
-        />
       )}
     </div>
   );

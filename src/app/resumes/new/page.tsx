@@ -1,22 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMutation, useAction } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Plus, Minus, Loader2 } from "lucide-react";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import { Plus, Minus, Loader2, ArrowLeft } from "lucide-react";
 import { generateResumePDF } from "@/lib/pdf-generator";
-
-type ResumeDoc = Doc<"resumes">;
+import { useRouter } from "next/navigation";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface ResumeFormData {
   title: string;
@@ -43,66 +35,63 @@ interface ResumeFormData {
     graduationDate: string;
   }>;
   skills: string[];
+  languages: Array<{
+    language: string;
+    proficiency: string;
+  }>;
+  certifications: Array<{
+    name: string;
+    issuer: string;
+    date: string;
+  }>;
 }
 
-interface EditResumeDialogProps {
-  resume: ResumeDoc;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+const initialFormData: ResumeFormData = {
+  title: "",
+  fullName: "",
+  email: "",
+  phone: "",
+  location: "",
+  website: "",
+  linkedin: "",
+  github: "",
+  summary: "",
+  experience: [
+    {
+      jobTitle: "",
+      company: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      description: "",
+    },
+  ],
+  education: [
+    {
+      degree: "",
+      institution: "",
+      location: "",
+      graduationDate: "",
+    },
+  ],
+  skills: [""],
+  languages: [],
+  certifications: [],
+};
 
-export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialogProps) {
-  const [formData, setFormData] = useState<ResumeFormData>({
-    title: resume.title,
-    fullName: resume.fields.fullName,
-    email: resume.fields.email,
-    phone: resume.fields.phone,
-    location: resume.fields.location || "",
-    website: resume.fields.website || "",
-    linkedin: resume.fields.linkedin || "",
-    github: resume.fields.github || "",
-    summary: resume.fields.summary || "",
-    experience: resume.fields.experience.map((exp) => ({
-      ...exp,
-      location: exp.location || "",
-      endDate: exp.endDate || "",
-    })),
-    education: resume.fields.education.map((edu) => ({
-      ...edu,
-      location: edu.location || "",
-    })),
-    skills: resume.fields.skills,
-  });
-
+export default function NewResumePage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState<ResumeFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const updateResume = useMutation(api.resumes.updateResume);
+  const [isLoading, setIsLoading] = useState(true);
+  const createResume = useMutation(api.resumes.createResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
   const savePdfToResume = useAction(api.resumes.savePdfToResume);
 
-  // Update form data when resume changes
-  useEffect(() => {
-    setFormData({
-      title: resume.title,
-      fullName: resume.fields.fullName,
-      email: resume.fields.email,
-      phone: resume.fields.phone,
-      location: resume.fields.location || "",
-      website: resume.fields.website || "",
-      linkedin: resume.fields.linkedin || "",
-      github: resume.fields.github || "",
-      summary: resume.fields.summary || "",
-      experience: resume.fields.experience.map((exp) => ({
-        ...exp,
-        location: exp.location || "",
-        endDate: exp.endDate || "",
-      })),
-      education: resume.fields.education.map((edu) => ({
-        ...edu,
-        location: edu.location || "",
-      })),
-      skills: resume.fields.skills,
-    });
-  }, [resume]);
+  // Set loading to false after component mounts
+  React.useEffect(() => {
+    setIsLoading(false);
+  }, []);
 
   const updateField = (field: keyof ResumeFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -194,10 +183,15 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
     setIsSubmitting(true);
 
     try {
+      // Filter out empty skills
       const cleanedSkills = formData.skills.filter((s) => s.trim() !== "");
+
+      // Filter out incomplete experience entries
       const cleanedExperience = formData.experience.filter(
-        (exp) => exp.jobTitle && exp.company && exp.startDate,
+        (exp) => exp.jobTitle && exp.company && exp.startDate && exp.description,
       );
+
+      // Filter out incomplete education entries
       const cleanedEducation = formData.education.filter(
         (edu) => edu.degree && edu.institution && edu.graduationDate,
       );
@@ -240,11 +234,11 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
           location: edu.location || undefined,
         })),
         skills: cleanedSkills,
-        languages: resume.fields.languages,
-        certifications: resume.fields.certifications,
+        languages: formData.languages.length > 0 ? formData.languages : undefined,
+        certifications: formData.certifications.length > 0 ? formData.certifications : undefined,
       };
 
-      // Step 1: Generate PDF first (before updating resume record)
+      // Step 1: Generate PDF first (before creating resume record)
       const pdfBlob = generateResumePDF(resumeFields);
 
       // Step 2: Client-side validation (UX optimization - provides immediate feedback)
@@ -296,39 +290,67 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
         );
       }
 
-      // Step 4: Validate and link PDF first (before updating metadata)
-      // This ensures metadata is only updated if PDF validation succeeds
-      await savePdfToResume({
-        resumeId: resume._id,
-        storageId,
-      });
-
-      // Step 5: Update resume metadata only after PDF is successfully validated and linked
-      await updateResume({
-        resumeId: resume._id,
+      // Step 4: Create resume record only after PDF is successfully uploaded
+      const resumeId = await createResume({
         title: formData.title,
+        designTemplate: "modern",
         fields: resumeFields,
       });
 
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to update resume:", error);
-      alert("Failed to update resume. Please try again.");
+      // Step 5: Link the uploaded PDF to the resume
+      await savePdfToResume({
+        resumeId,
+        storageId,
+      });
+
+      router.push("/resumes");
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === "RESUME_LIMIT_REACHED") {
+        alert(
+          "You have reached the maximum of 5 resumes. Please delete a resume before creating a new one.",
+        );
+      } else {
+        console.error("Failed to create resume:", error);
+        alert("Failed to create resume. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Resume</DialogTitle>
-        </DialogHeader>
+  const handleCancel = () => {
+    router.push("/resumes");
+  };
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+          <p className="text-muted-foreground text-lg">Loading form...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="mb-6">
+          <Button variant="ghost" onClick={handleCancel} disabled={isSubmitting} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Resumes
+          </Button>
+          <h1 className="text-3xl font-bold">Create New Resume</h1>
+          <p className="text-muted-foreground mt-2">
+            Fill in the details below to create your professional resume
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Resume Title */}
-          <div>
+          <div className="bg-card rounded-lg border p-6">
             <label className="mb-2 block text-sm font-medium">
               Resume Title <span className="text-destructive">*</span>
             </label>
@@ -341,8 +363,8 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
           </div>
 
           {/* Personal Information */}
-          <div className="space-y-4 rounded-lg border p-4">
-            <h3 className="text-lg font-semibold">Personal Information</h3>
+          <div className="bg-card space-y-4 rounded-lg border p-6">
+            <h3 className="text-xl font-semibold">Personal Information</h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -424,7 +446,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
             <div>
               <label className="mb-2 block text-sm font-medium">Professional Summary</label>
               <textarea
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.summary}
                 onChange={(e) => updateField("summary", e.target.value)}
                 placeholder="Brief summary of your professional background and goals..."
@@ -433,9 +455,9 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
           </div>
 
           {/* Work Experience */}
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Work Experience</h3>
+              <h3 className="text-xl font-semibold">Work Experience</h3>
               <Button type="button" size="sm" onClick={addExperience}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
@@ -443,7 +465,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
             </div>
 
             {formData.experience.map((exp, index) => (
-              <div key={index} className="space-y-3 rounded border p-3">
+              <div key={index} className="bg-background space-y-3 rounded border p-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Experience {index + 1}</span>
                   {formData.experience.length > 1 && (
@@ -502,7 +524,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
                 </div>
                 <textarea
                   required
-                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                   value={exp.description}
                   onChange={(e) => updateExperience(index, "description", e.target.value)}
                   placeholder="Describe your responsibilities and achievements..."
@@ -512,9 +534,9 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
           </div>
 
           {/* Education */}
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Education</h3>
+              <h3 className="text-xl font-semibold">Education</h3>
               <Button type="button" size="sm" onClick={addEducation}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
@@ -522,7 +544,7 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
             </div>
 
             {formData.education.map((edu, index) => (
-              <div key={index} className="space-y-3 rounded border p-3">
+              <div key={index} className="bg-background space-y-3 rounded border p-4">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Education {index + 1}</span>
                   {formData.education.length > 1 && (
@@ -576,16 +598,16 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
           </div>
 
           {/* Skills */}
-          <div className="space-y-4 rounded-lg border p-4">
+          <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Skills</h3>
+              <h3 className="text-xl font-semibold">Skills</h3>
               <Button type="button" size="sm" onClick={addSkill}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
               </Button>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
               {formData.skills.map((skill, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
@@ -609,28 +631,30 @@ export function EditResumeDialog({ resume, open, onOpenChange }: EditResumeDialo
             </div>
           </div>
 
-          <DialogFooter>
+          {/* Action Buttons */}
+          <div className="bg-card flex justify-end gap-4 rounded-lg border p-6">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleCancel}
               disabled={isSubmitting}
+              size="lg"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} size="lg">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
+                  Creating...
                 </>
               ) : (
-                "Update Resume"
+                "Create Resume"
               )}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
