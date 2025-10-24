@@ -15,6 +15,10 @@ const eslintConfig = [
     ignores: [
       ".clerk/**",
       ".next/**",
+      // Ignore Playwright tests and artifacts
+      "e2e/**",
+      "playwright-report/**",
+      "test-results/**",
       "convex/_generated/**",
       "node_modules/**",
       "out/**",

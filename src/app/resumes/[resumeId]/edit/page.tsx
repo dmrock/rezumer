@@ -115,7 +115,7 @@ function SortableSkillBadge({
     width: lockDimensions ? width : undefined,
     height: lockDimensions ? height : undefined,
     // Further isolate layout calculations while dragging
-    contain: lockDimensions ? ("layout paint size" as any) : undefined,
+    contain: lockDimensions ? ("layout paint size" as React.CSSProperties["contain"]) : undefined,
   };
 
   const setRefs = React.useCallback(
