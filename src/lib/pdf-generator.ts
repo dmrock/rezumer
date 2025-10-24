@@ -104,25 +104,15 @@ export function generateResumePDF(data: ResumeData): Blob {
   doc.text(data.fullName, MARGIN, yPosition);
   yPosition += 7;
 
-  // Contact Information - Line 1: Email, Phone, and Location
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  const contactLine1: string[] = [data.email, data.phone];
-  if (data.location) contactLine1.push(data.location);
-  doc.text(contactLine1.join(" • "), MARGIN, yPosition);
-  yPosition += 4;
+  // Contact Information (wrapped)
+  const contactLine1Text = [data.email, data.phone, data.location].filter(Boolean).join(" • ");
+  addText(contactLine1Text, 9, "normal");
 
-  // Contact Information - Line 2: Links
-  const contactLine2: string[] = [];
-  if (data.website) contactLine2.push(data.website);
-  if (data.linkedin) contactLine2.push(data.linkedin);
-  if (data.github) contactLine2.push(data.github);
-
-  if (contactLine2.length > 0) {
-    doc.text(contactLine2.join(" • "), MARGIN, yPosition);
-    yPosition += 5;
+  const contactLine2Text = [data.website, data.linkedin, data.github].filter(Boolean).join(" • ");
+  if (contactLine2Text) {
+    addText(contactLine2Text, 9, "normal");
   } else {
-    yPosition += 1;
+    addSpace(1);
   }
 
   addSpace(2);
