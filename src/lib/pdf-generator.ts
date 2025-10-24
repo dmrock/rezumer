@@ -104,17 +104,27 @@ export function generateResumePDF(data: ResumeData): Blob {
   doc.text(data.fullName, MARGIN, yPosition);
   yPosition += 7;
 
-  // Contact Information
+  // Contact Information - Line 1: Email, Phone, and Location
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  const contactInfo: string[] = [data.email, data.phone];
-  if (data.location) contactInfo.push(data.location);
-  if (data.website) contactInfo.push(data.website);
-  if (data.linkedin) contactInfo.push(data.linkedin);
-  if (data.github) contactInfo.push(data.github);
+  const contactLine1: string[] = [data.email, data.phone];
+  if (data.location) contactLine1.push(data.location);
+  doc.text(contactLine1.join(" • "), MARGIN, yPosition);
+  yPosition += 4;
 
-  doc.text(contactInfo.join(" • "), MARGIN, yPosition);
-  yPosition += 5;
+  // Contact Information - Line 2: Links
+  const contactLine2: string[] = [];
+  if (data.website) contactLine2.push(data.website);
+  if (data.linkedin) contactLine2.push(data.linkedin);
+  if (data.github) contactLine2.push(data.github);
+
+  if (contactLine2.length > 0) {
+    doc.text(contactLine2.join(" • "), MARGIN, yPosition);
+    yPosition += 5;
+  } else {
+    yPosition += 1;
+  }
+
   addSpace(2);
 
   // Professional Summary (if exists)
