@@ -5,10 +5,31 @@ import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Loader2, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Minus, Loader2, ArrowLeft, X, GripVertical } from "lucide-react";
 import { generateResumePDF } from "@/lib/pdf-generator";
 import { useRouter, useParams } from "next/navigation";
 import type { Id } from "../../../../../convex/_generated/dataModel";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  type DragOverEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface ResumeFormData {
   title: string;
@@ -37,6 +58,146 @@ interface ResumeFormData {
   skills: string[];
 }
 
+// Sortable Skill Badge Component
+interface SortableSkillBadgeProps {
+  skill: string;
+  index: number;
+  isEditing: boolean;
+  onEdit: () => void;
+  onSave: (value: string) => void;
+  onRemove: () => void;
+  // When true, lock the badge's measured width/height to avoid sibling distortion during DnD
+  lockDimensions: boolean;
+}
+
+function SortableSkillBadge({
+  skill,
+  index,
+  isEditing,
+  onEdit,
+  onSave,
+  onRemove,
+  lockDimensions,
+}: SortableSkillBadgeProps) {
+  const [editValue, setEditValue] = useState(skill);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [width, setWidth] = React.useState<number | undefined>(undefined);
+  const [height, setHeight] = React.useState<number | undefined>(undefined);
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `skill-${index}`,
+  });
+
+  // Measure dimensions on mount and when skill changes (and when not actively dragging this item)
+  React.useLayoutEffect(() => {
+    if (containerRef.current && !isDragging) {
+      setWidth(containerRef.current.offsetWidth);
+      setHeight(containerRef.current.offsetHeight);
+    }
+  }, [skill, isDragging, lockDimensions]);
+
+  const style: React.CSSProperties = {
+    // Freeze siblings by ignoring dnd-kit transforms during active drag; keep original item in place
+    transform: isDragging
+      ? undefined
+      : lockDimensions
+        ? undefined
+        : CSS.Transform.toString(transform),
+    // Disable transform animation during active drag to avoid visual squish
+    transition: lockDimensions
+      ? "none"
+      : !isDragging && transform
+        ? transition || undefined
+        : undefined,
+    // Use visibility hidden (not opacity 0) so layout space is preserved but the element is not visible
+    visibility: isDragging ? "hidden" : undefined,
+    // Lock dimensions for all items while any drag is active to prevent flex reflow jitter
+    width: lockDimensions ? width : undefined,
+    height: lockDimensions ? height : undefined,
+    // Further isolate layout calculations while dragging
+    contain: lockDimensions ? ("layout paint size" as React.CSSProperties["contain"]) : undefined,
+  };
+
+  const setRefs = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node;
+      setNodeRef(node);
+    },
+    [setNodeRef],
+  );
+
+  useEffect(() => {
+    setEditValue(skill);
+  }, [skill]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onSave(editValue);
+    } else if (e.key === "Escape") {
+      setEditValue(skill);
+      onSave(skill);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div ref={setRefs} style={style} className="inline-flex flex-none">
+        <Input
+          autoFocus
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => onSave(editValue)}
+          onKeyDown={handleKeyDown}
+          className="h-7 w-auto min-w-[100px] px-2 py-0 text-xs"
+          placeholder="Enter skill"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setRefs} style={style} className="group inline-flex flex-none items-center gap-1">
+      <Badge
+        variant="secondary"
+        className="hover:bg-secondary/60 cursor-pointer py-1.5 pr-2 pl-1.5 text-sm whitespace-nowrap transition-colors select-none"
+        onClick={onEdit}
+      >
+        <GripVertical
+          {...attributes}
+          {...listeners}
+          className="text-muted-foreground mr-1 h-3.5 w-3.5 cursor-grab active:cursor-grabbing"
+        />
+        {skill}
+      </Badge>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+        aria-label="Remove skill"
+      >
+        <X className="text-muted-foreground hover:text-destructive h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+// Placeholder to reserve space where the active badge would land
+function SkillPlaceholder({ skill }: { skill: string }) {
+  return (
+    <div className="inline-flex flex-none">
+      <Badge
+        variant="secondary"
+        // invisible preserves layout space without painting content
+        className="invisible py-1.5 pr-2 pl-1.5 text-sm whitespace-nowrap select-none"
+      >
+        <GripVertical className="mr-1 h-3.5 w-3.5" />
+        {skill}
+      </Badge>
+    </div>
+  );
+}
+
 export default function EditResumePage() {
   const router = useRouter();
   const params = useParams();
@@ -45,9 +206,21 @@ export default function EditResumePage() {
   const resume = useQuery(api.resumes.getResumeById, { resumeId });
   const [formData, setFormData] = useState<ResumeFormData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingSkillIndex, setEditingSkillIndex] = useState<number | null>(null);
+  const [newSkillInput, setNewSkillInput] = useState("");
+  const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
+  const [overSkillId, setOverSkillId] = useState<string | null>(null);
   const updateResume = useMutation(api.resumes.updateResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
   const savePdfToResume = useAction(api.resumes.savePdfToResume);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   // Initialize form data when resume is loaded
   useEffect(() => {
@@ -196,14 +369,17 @@ export default function EditResumePage() {
   };
 
   const addSkill = () => {
-    setFormData((prev) =>
-      prev
-        ? {
-            ...prev,
-            skills: [...prev.skills, ""],
-          }
-        : null,
-    );
+    if (newSkillInput.trim()) {
+      setFormData((prev) =>
+        prev
+          ? {
+              ...prev,
+              skills: [...prev.skills, newSkillInput.trim()],
+            }
+          : null,
+      );
+      setNewSkillInput("");
+    }
   };
 
   const removeSkill = (index: number) => {
@@ -215,6 +391,69 @@ export default function EditResumePage() {
           }
         : null,
     );
+    // Clear editing state if we're removing the skill being edited
+    if (editingSkillIndex === index) {
+      setEditingSkillIndex(null);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setFormData((prev) => {
+        if (!prev) return null;
+
+        const oldIndex = prev.skills.findIndex((_, i) => `skill-${i}` === active.id);
+        const newIndex = prev.skills.findIndex((_, i) => `skill-${i}` === over.id);
+
+        return {
+          ...prev,
+          skills: arrayMove(prev.skills, oldIndex, newIndex),
+        };
+      });
+    }
+
+    // Ensure no stale editing index remains after reordering
+    setEditingSkillIndex(null);
+    setActiveSkillId(null);
+    setOverSkillId(null);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    // Clear any editing state to avoid stale indices while dragging
+    setEditingSkillIndex(null);
+    setActiveSkillId(event.active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const overId = event.over?.id as string | undefined;
+    setOverSkillId(overId ?? null);
+  };
+
+  // Safely extract the numeric index from a skill id like "skill-3"
+  // Returns null when id is malformed, non-numeric, or out of bounds
+  const safeIndexFromId = (id: unknown, max: number): number | null => {
+    if (typeof id !== "string") return null;
+    const parts = id.split("-");
+    if (parts.length < 2) return null;
+    const n = Number.parseInt(parts[1] ?? "", 10);
+    if (Number.isNaN(n)) return null;
+    if (n < 0 || n >= max) return null;
+    return n;
+  };
+
+  const startEditingSkill = (index: number) => {
+    setEditingSkillIndex(index);
+  };
+
+  const finishEditingSkill = (index: number, value: string) => {
+    if (value.trim()) {
+      updateSkill(index, value.trim());
+    } else {
+      removeSkill(index);
+    }
+    setEditingSkillIndex(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -630,33 +869,84 @@ export default function EditResumePage() {
           <div className="bg-card space-y-4 rounded-lg border p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold">Skills</h3>
-              <Button type="button" size="sm" onClick={addSkill}>
+            </div>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={formData.skills.map((_, i) => `skill-${i}`)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="flex flex-wrap gap-x-1 gap-y-5">
+                  {formData.skills.map((skill, index) => {
+                    const activeIndex = safeIndexFromId(activeSkillId, formData.skills.length);
+                    const overIndex = safeIndexFromId(overSkillId, formData.skills.length);
+
+                    return (
+                      <React.Fragment key={`frag-${index}`}>
+                        {activeIndex !== null &&
+                          overIndex !== null &&
+                          overIndex === index &&
+                          activeIndex !== overIndex && (
+                            <SkillPlaceholder skill={formData.skills[activeIndex]} />
+                          )}
+                        <SortableSkillBadge
+                          key={`skill-${index}`}
+                          skill={skill}
+                          index={index}
+                          isEditing={editingSkillIndex === index}
+                          lockDimensions={!!activeSkillId}
+                          onEdit={() => startEditingSkill(index)}
+                          onSave={(value) => finishEditingSkill(index, value)}
+                          onRemove={() => removeSkill(index)}
+                        />
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </SortableContext>
+              <DragOverlay dropAnimation={null}>
+                {(() => {
+                  const overlayIndex = safeIndexFromId(activeSkillId, formData.skills.length);
+                  if (overlayIndex === null) return null;
+                  return (
+                    <div style={{ width: "fit-content" }}>
+                      <Badge
+                        variant="secondary"
+                        className="cursor-grabbing py-1.5 pr-2 pl-1.5 text-sm whitespace-nowrap shadow-2xl select-none"
+                      >
+                        <GripVertical className="text-muted-foreground mr-1 h-3.5 w-3.5" />
+                        {formData.skills[overlayIndex]}
+                      </Badge>
+                    </div>
+                  );
+                })()}
+              </DragOverlay>
+            </DndContext>
+
+            {/* Add new skill input */}
+            <div className="flex gap-2 pt-2">
+              <Input
+                value={newSkillInput}
+                onChange={(e) => setNewSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSkill();
+                  }
+                }}
+                placeholder="Add a new skill (e.g., React, Node.js, Python)"
+                className="flex-1"
+              />
+              <Button type="button" size="sm" onClick={addSkill} disabled={!newSkillInput.trim()}>
                 <Plus className="mr-1 h-4 w-4" />
                 Add
               </Button>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-              {formData.skills.map((skill, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    required
-                    value={skill}
-                    onChange={(e) => updateSkill(index, e.target.value)}
-                    placeholder="e.g., React, Node.js, Python"
-                  />
-                  {formData.skills.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSkill(index)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
 

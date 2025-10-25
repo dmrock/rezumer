@@ -47,7 +47,7 @@ function ResumeCard({
       await onDelete();
       // Success - isDeleting will be cleared when component unmounts
       // or by the finally block if there's an error
-    } catch (error) {
+    } catch {
       // Error already handled by parent handleDelete
       // Just ensure we reset the deleting state
     } finally {
