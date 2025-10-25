@@ -414,17 +414,33 @@ export default function EditResumePage() {
       });
     }
 
+    // Ensure no stale editing index remains after reordering
+    setEditingSkillIndex(null);
     setActiveSkillId(null);
     setOverSkillId(null);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    // Clear any editing state to avoid stale indices while dragging
+    setEditingSkillIndex(null);
     setActiveSkillId(event.active.id as string);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const overId = event.over?.id as string | undefined;
     setOverSkillId(overId ?? null);
+  };
+
+  // Safely extract the numeric index from a skill id like "skill-3"
+  // Returns null when id is malformed, non-numeric, or out of bounds
+  const safeIndexFromId = (id: unknown, max: number): number | null => {
+    if (typeof id !== "string") return null;
+    const parts = id.split("-");
+    if (parts.length < 2) return null;
+    const n = Number.parseInt(parts[1] ?? "", 10);
+    if (Number.isNaN(n)) return null;
+    if (n < 0 || n >= max) return null;
+    return n;
   };
 
   const startEditingSkill = (index: number) => {
@@ -868,17 +884,12 @@ export default function EditResumePage() {
               >
                 <div className="flex flex-wrap gap-x-1 gap-y-5">
                   {formData.skills.map((skill, index) => {
-                    const activeIndex = activeSkillId
-                      ? parseInt(activeSkillId.split("-")[1] || "", 10)
-                      : null;
-                    const overIndex = overSkillId
-                      ? parseInt(overSkillId.split("-")[1] || "", 10)
-                      : null;
+                    const activeIndex = safeIndexFromId(activeSkillId, formData.skills.length);
+                    const overIndex = safeIndexFromId(overSkillId, formData.skills.length);
 
                     return (
                       <React.Fragment key={`frag-${index}`}>
-                        {activeSkillId &&
-                          activeIndex !== null &&
+                        {activeIndex !== null &&
                           overIndex !== null &&
                           overIndex === index &&
                           activeIndex !== overIndex && (
@@ -900,17 +911,21 @@ export default function EditResumePage() {
                 </div>
               </SortableContext>
               <DragOverlay dropAnimation={null}>
-                {activeSkillId ? (
-                  <div style={{ width: "fit-content" }}>
-                    <Badge
-                      variant="secondary"
-                      className="cursor-grabbing py-1.5 pr-2 pl-1.5 text-sm whitespace-nowrap shadow-2xl select-none"
-                    >
-                      <GripVertical className="text-muted-foreground mr-1 h-3.5 w-3.5" />
-                      {formData.skills[parseInt(activeSkillId.split("-")[1])]}
-                    </Badge>
-                  </div>
-                ) : null}
+                {(() => {
+                  const overlayIndex = safeIndexFromId(activeSkillId, formData.skills.length);
+                  if (overlayIndex === null) return null;
+                  return (
+                    <div style={{ width: "fit-content" }}>
+                      <Badge
+                        variant="secondary"
+                        className="cursor-grabbing py-1.5 pr-2 pl-1.5 text-sm whitespace-nowrap shadow-2xl select-none"
+                      >
+                        <GripVertical className="text-muted-foreground mr-1 h-3.5 w-3.5" />
+                        {formData.skills[overlayIndex]}
+                      </Badge>
+                    </div>
+                  );
+                })()}
               </DragOverlay>
             </DndContext>
 
