@@ -6,7 +6,7 @@ import { api } from "../../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Loader2, ArrowLeft, X, GripVertical } from "lucide-react";
+import { Plus, Minus, Loader2, ArrowLeft, X, GripVertical, Calendar } from "lucide-react";
 import { generateResumePDF } from "@/lib/pdf-generator";
 import { useRouter, useParams } from "next/navigation";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -31,6 +31,17 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// Local experience type to avoid loose typing and allow strong field updates
+type Experience = {
+  jobTitle: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  currentlyWorking: boolean;
+};
+
 interface ResumeFormData {
   title: string;
   fullName: string;
@@ -41,14 +52,7 @@ interface ResumeFormData {
   linkedin: string;
   github: string;
   summary: string;
-  experience: Array<{
-    jobTitle: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-  }>;
+  experience: Experience[];
   education: Array<{
     degree: string;
     institution: string;
@@ -83,7 +87,6 @@ function SortableSkillBadge({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [width, setWidth] = React.useState<number | undefined>(undefined);
   const [height, setHeight] = React.useState<number | undefined>(undefined);
-
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `skill-${index}`,
   });
@@ -210,6 +213,7 @@ export default function EditResumePage() {
   const [newSkillInput, setNewSkillInput] = useState("");
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
   const [overSkillId, setOverSkillId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type?: "error" | "success" } | null>(null);
   const updateResume = useMutation(api.resumes.updateResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
   const savePdfToResume = useAction(api.resumes.savePdfToResume);
@@ -244,9 +248,14 @@ export default function EditResumePage() {
             endDate?: string;
             description: string;
           }) => ({
-            ...exp,
+            jobTitle: exp.jobTitle,
+            company: exp.company,
             location: exp.location || "",
+            startDate: exp.startDate,
             endDate: exp.endDate || "",
+            description: exp.description,
+            // Consider "currently working" when endDate is absent or empty
+            currentlyWorking: !exp.endDate,
           }),
         ),
         education: resume.fields.education.map(
@@ -265,11 +274,45 @@ export default function EditResumePage() {
     }
   }, [resume]);
 
+  // Month input refs to reliably open native pickers on icon click
+  type HTMLInputElementWithPicker = HTMLInputElement & { showPicker?: () => void };
+  const monthRefs = React.useRef<{
+    start: Map<number, HTMLInputElementWithPicker>;
+    end: Map<number, HTMLInputElementWithPicker>;
+  }>({ start: new Map(), end: new Map() });
+
+  const setStartMonthRef = (index: number) => (el: HTMLInputElement | null) => {
+    const cast = el as HTMLInputElementWithPicker | null;
+    if (cast) monthRefs.current.start.set(index, cast);
+    else monthRefs.current.start.delete(index);
+  };
+  const setEndMonthRef = (index: number) => (el: HTMLInputElement | null) => {
+    const cast = el as HTMLInputElementWithPicker | null;
+    if (cast) monthRefs.current.end.set(index, cast);
+    else monthRefs.current.end.delete(index);
+  };
+
+  const openMonthPicker = (kind: "start" | "end", i: number) => {
+    const map = kind === "start" ? monthRefs.current.start : monthRefs.current.end;
+    const el = map.get(i);
+    if (!el) return;
+    if (typeof el.showPicker === "function") {
+      el.showPicker();
+    } else {
+      el.focus();
+      el.click();
+    }
+  };
+
   const updateField = (field: keyof ResumeFormData, value: string) => {
     setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
-  const updateExperience = (index: number, field: string, value: string) => {
+  const updateExperience = <K extends keyof Experience>(
+    index: number,
+    field: K,
+    value: Experience[K],
+  ) => {
     setFormData((prev) =>
       prev
         ? {
@@ -280,6 +323,13 @@ export default function EditResumePage() {
           }
         : null,
     );
+  };
+
+  // Lightweight toast helper
+  const showError = (message: string) => {
+    setToast({ message, type: "error" });
+    window.clearTimeout((showError as any)._t);
+    (showError as any)._t = window.setTimeout(() => setToast(null), 3000);
   };
 
   const addExperience = () => {
@@ -296,6 +346,7 @@ export default function EditResumePage() {
                 startDate: "",
                 endDate: "",
                 description: "",
+                currentlyWorking: false,
               },
             ],
           }
@@ -464,6 +515,17 @@ export default function EditResumePage() {
 
     try {
       const cleanedSkills = formData.skills.filter((s) => s.trim() !== "");
+
+      // Validate: endDate is required if not currently working
+      const invalidEndIndex = formData.experience.findIndex(
+        (exp) => !exp.currentlyWorking && (!exp.endDate || exp.endDate.trim() === ""),
+      );
+      if (invalidEndIndex !== -1) {
+        showError("End Date is required for all non-current positions.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const cleanedExperience = formData.experience.filter(
         (exp) => exp.jobTitle && exp.company && exp.startDate,
       );
@@ -499,11 +561,16 @@ export default function EditResumePage() {
         linkedin: formData.linkedin || undefined,
         github: formData.github || undefined,
         summary: formData.summary || undefined,
-        experience: cleanedExperience.map((exp) => ({
-          ...exp,
-          location: exp.location || undefined,
-          endDate: exp.endDate || undefined,
-        })),
+        experience: cleanedExperience.map(
+          ({ jobTitle, company, location, startDate, endDate, description }) => ({
+            jobTitle,
+            company,
+            location: location || undefined,
+            startDate,
+            endDate: endDate || undefined,
+            description,
+          }),
+        ),
         education: cleanedEducation.map((edu) => ({
           ...edu,
           location: edu.location || undefined,
@@ -605,6 +672,13 @@ export default function EditResumePage() {
 
   return (
     <div className="p-6">
+      {/* Toast */}
+      {toast && (
+        <div className="border-destructive/30 bg-destructive/10 text-destructive supports-[backdrop-filter]:bg-destructive/10 pointer-events-none fixed top-4 right-4 z-50 flex max-w-md items-start gap-3 rounded-md border px-4 py-3 text-sm backdrop-blur">
+          <span className="bg-destructive mt-[2px] inline-block h-2.5 w-2.5 rounded-full" />
+          <p className="pointer-events-auto">{toast.message}</p>
+        </div>
+      )}
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-6">
@@ -748,8 +822,12 @@ export default function EditResumePage() {
                   )}
                 </div>
 
+                {/* Top row: title and company */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
+                    <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                      Job Title
+                    </label>
                     <Input
                       required
                       value={exp.jobTitle}
@@ -758,6 +836,9 @@ export default function EditResumePage() {
                     />
                   </div>
                   <div>
+                    <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                      Company
+                    </label>
                     <Input
                       required
                       value={exp.company}
@@ -765,7 +846,14 @@ export default function EditResumePage() {
                       placeholder="Company"
                     />
                   </div>
+                </div>
+
+                {/* Second row: location + dates in one line on desktop */}
+                <div className="grid gap-3 md:grid-cols-3">
                   <div>
+                    <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                      Location
+                    </label>
                     <Input
                       value={exp.location}
                       onChange={(e) => updateExperience(index, "location", e.target.value)}
@@ -773,21 +861,93 @@ export default function EditResumePage() {
                     />
                   </div>
                   <div>
-                    <Input
-                      required
-                      type="month"
-                      value={exp.startDate}
-                      onChange={(e) => updateExperience(index, "startDate", e.target.value)}
-                      placeholder="Start Date"
-                    />
+                    <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                      Start Date
+                    </label>
+                    <div className="relative">
+                      <Input
+                        ref={setStartMonthRef(index)}
+                        required
+                        type="month"
+                        value={exp.startDate}
+                        onChange={(e) => updateExperience(index, "startDate", e.target.value)}
+                        placeholder="Start Date"
+                        aria-label="Start Date"
+                        className="pr-9 [&::-webkit-calendar-picker-indicator]:opacity-0"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => openMonthPicker("start", index)}
+                        aria-label="Open start date picker"
+                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 p-1"
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <div>
-                    <Input
-                      type="month"
-                      value={exp.endDate}
-                      onChange={(e) => updateExperience(index, "endDate", e.target.value)}
-                      placeholder="End Date (leave empty for current)"
-                    />
+                    <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                      End Date
+                    </label>
+                    <div className="relative">
+                      <Input
+                        ref={setEndMonthRef(index)}
+                        type="month"
+                        value={exp.endDate}
+                        onChange={(e) => updateExperience(index, "endDate", e.target.value)}
+                        placeholder="End Date"
+                        aria-label="End Date"
+                        className={
+                          "disabled:!bg-muted/20 disabled:text-muted-foreground disabled:border-muted-foreground/30 pr-9 [&::-webkit-calendar-picker-indicator]:opacity-0 " +
+                          (!exp.currentlyWorking && !exp.endDate
+                            ? "aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+                            : "")
+                        }
+                        required={!exp.currentlyWorking}
+                        disabled={!!exp.currentlyWorking}
+                        aria-disabled={!!exp.currentlyWorking}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => openMonthPicker("end", index)}
+                        aria-label="Open end date picker"
+                        disabled={!!exp.currentlyWorking}
+                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 p-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        id={`current-${index}`}
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={!!exp.currentlyWorking}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          if (checked) {
+                            // Allow only one current position at a time
+                            const anotherCurrent = formData.experience.some(
+                              (ex, i) => i !== index && ex.currentlyWorking,
+                            );
+                            if (anotherCurrent) {
+                              showError(
+                                "You already have a current position set. Uncheck it before selecting another.",
+                              );
+                              return;
+                            }
+                            updateExperience(index, "currentlyWorking", true);
+                            // Clear end date when currently working
+                            updateExperience(index, "endDate", "");
+                          } else {
+                            updateExperience(index, "currentlyWorking", false);
+                          }
+                        }}
+                      />
+                      <label htmlFor={`current-${index}`} className="text-sm">
+                        Currently working here
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <textarea
