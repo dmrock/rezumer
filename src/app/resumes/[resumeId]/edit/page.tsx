@@ -214,6 +214,7 @@ export default function EditResumePage() {
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
   const [overSkillId, setOverSkillId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type?: "error" | "success" } | null>(null);
+  const toastTimeoutRef = React.useRef<number | null>(null);
   const updateResume = useMutation(api.resumes.updateResume);
   const generateUploadUrl = useMutation(api.resumes.generateUploadUrl);
   const savePdfToResume = useAction(api.resumes.savePdfToResume);
@@ -328,8 +329,10 @@ export default function EditResumePage() {
   // Lightweight toast helper
   const showError = (message: string) => {
     setToast({ message, type: "error" });
-    window.clearTimeout((showError as any)._t);
-    (showError as any)._t = window.setTimeout(() => setToast(null), 3000);
+    if (toastTimeoutRef.current !== null) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+    toastTimeoutRef.current = window.setTimeout(() => setToast(null), 3000);
   };
 
   const addExperience = () => {
