@@ -4,7 +4,7 @@ Goal: Let an AI contributor make correct, minimal, idiomatic changes fast. Refer
 
 ## Architecture
 
-Frontend: Next.js 15 App Router (`src/app/*`), React 19. Global shell & providers in `src/app/layout.tsx` (order matters: `ClerkProvider` → `ConvexClientProvider` → `<html>` → `ThemeProvider`).
+Frontend: Next.js 15 App Router (`src/app/*`), React 19. Global shell & providers in `src/app/layout.tsx` (order matters: `ClerkProvider` → `ConvexClientProvider` → `<html>`).
 Backend: Convex functions in `convex/` with schema + indexes in `convex/schema.ts`.
 Auth: Clerk via `src/middleware.ts` (public routes: `/`, `/sign-in`). Convex auth: `ctx.auth.getUserIdentity()`.
 Data access: Only through Convex generated API (`convex/_generated`). No ad‑hoc fetch calls.
@@ -19,7 +19,7 @@ Always: get identity → look up user via `by_clerkId` → enforce ownership (`F
 
 ## Frontend Patterns
 
-Routes: folder with `page.tsx` under `src/app`. Default server components; add `"use client"` only when hooks/state used. Use Convex hooks/imports for queries & mutations. Do not reorder provider stack. Theme toggling pattern in `src/components/theme-toggle.tsx` (mount gate + `resolvedTheme`).
+Routes: folder with `page.tsx` under `src/app`. Default server components; add `"use client"` only when hooks/state used. Use Convex hooks/imports for queries & mutations. Do not reorder provider stack. Theme: dark-only via Tailwind v4 tokens in `src/app/globals.css` (no theme toggling/provider; `:root { color-scheme: dark }`).
 
 ## Styling
 

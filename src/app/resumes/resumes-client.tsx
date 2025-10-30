@@ -158,8 +158,8 @@ export function ResumesClient() {
 
       {/* Limit reached message */}
       {resumes.length >= 5 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/20">
-          <p className="text-sm text-amber-900 dark:text-amber-200">
+        <div className="rounded-lg border border-amber-900 bg-amber-950/20 p-4">
+          <p className="text-sm text-amber-200">
             You&apos;ve reached the maximum of 5 resumes. Please delete a resume to create a new
             one.
           </p>
