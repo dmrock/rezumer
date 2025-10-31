@@ -618,7 +618,7 @@ export function ApplicationsClient() {
                                 "transition-colors hover:cursor-pointer " +
                                 (a.favorite
                                   ? "border-yellow-600/40 bg-yellow-900/30 text-yellow-400 hover:bg-yellow-900/50"
-                                  : "text-muted-foreground border-yellow-700/40 hover:!bg-yellow-900/50")
+                                  : "text-muted-foreground border-yellow-700/40 hover:!bg-yellow-900/50 hover:!text-yellow-400")
                               }
                             >
                               <Star
