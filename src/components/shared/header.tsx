@@ -64,7 +64,7 @@ export function Header() {
                     >
                       {item.label}
                       {active && (
-                        <span className="pointer-events-none absolute right-2 -bottom-px left-2 h-0.5 bg-[var(--color-foreground)]" />
+                        <span className="pointer-events-none absolute left-2 right-2 -bottom-px h-0.5 bg-[var(--color-foreground)]" />
                       )}
                     </Link>
                   );
