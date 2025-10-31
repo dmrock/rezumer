@@ -1,33 +1,7 @@
 @import "tailwindcss";
 
-/* Use class-based dark mode to match next-themes (attribute="class") */
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* Design tokens (Tailwind v4 theme variables) */
+/* Design tokens (Tailwind v4 theme variables) — dark is the only theme */
 @theme {
-  /* Light theme (Vercel-like) */
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(0 0% 0%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(0 0% 0%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(0 0% 0%);
-  --color-primary: hsl(0 0% 0%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(0 0% 96%);
-  --color-secondary-foreground: hsl(0 0% 0%);
-  --color-muted: hsl(0 0% 96%);
-  --color-muted-foreground: hsl(0 0% 40%);
-  --color-accent: hsl(0 0% 96%);
-  --color-accent-foreground: hsl(0 0% 0%);
-  --color-destructive: hsl(0 84% 60%);
-  --color-border: hsl(0 0% 90%);
-  --color-input: hsl(0 0% 100%);
-  --color-ring: hsl(0 0% 0%);
-}
-
-/* Override tokens for dark mode via regular CSS variables */
-.dark {
   --color-background: hsl(0 0% 0%);
   --color-foreground: hsl(0 0% 100%);
   --color-card: hsl(0 0% 4%);
@@ -46,13 +20,12 @@
   --color-border: hsl(0 0% 15%);
   --color-input: hsl(0 0% 10%);
   --color-ring: hsl(0 0% 100%);
-  color-scheme: dark;
 }
 
 /* App-level custom vars not tied to utilities */
 :root {
   --radius: 0.5rem;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {

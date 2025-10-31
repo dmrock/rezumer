@@ -37,38 +37,31 @@ type Stage = (typeof STAGES)[number];
 const STAGE_META: Record<Stage, { label: string; className: string }> = {
   applied: {
     label: "Applied",
-    className:
-      "border-gray-300 bg-gray-100 text-gray-800 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-300",
+    className: "border-gray-700 bg-gray-800/40 text-gray-300",
   },
   cv_rejected: {
     label: "CV Rejected",
-    className:
-      "border-rose-300 bg-rose-100 text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-400",
+    className: "border-rose-900/50 bg-rose-950/40 text-rose-400",
   },
   hr_call: {
     label: "HR Call",
-    className:
-      "border-blue-300 bg-blue-100 text-blue-800 dark:border-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    className: "border-blue-700 bg-blue-900/40 text-blue-300",
   },
   interview: {
     label: "Interview",
-    className:
-      "border-violet-300 bg-violet-100 text-violet-800 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    className: "border-violet-700 bg-violet-900/40 text-violet-300",
   },
   offer: {
     label: "Offer",
-    className:
-      "border-green-300 bg-green-100 text-green-800 dark:border-green-700 dark:bg-green-900/40 dark:text-green-300",
+    className: "border-green-700 bg-green-900/40 text-green-300",
   },
   rejected: {
     label: "Rejected",
-    className:
-      "border-red-300 bg-red-100 text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400",
+    className: "border-red-900/50 bg-red-950/40 text-red-400",
   },
   ghosted: {
     label: "Ghosted",
-    className:
-      "border-zinc-300 bg-zinc-100 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300",
+    className: "border-zinc-700 bg-zinc-900/40 text-zinc-300",
   },
 };
 const BADGE_BASE =
@@ -624,15 +617,15 @@ export function ApplicationsClient() {
                               className={
                                 "transition-colors hover:cursor-pointer " +
                                 (a.favorite
-                                  ? "border-yellow-200 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:border-yellow-600/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50"
-                                  : "text-muted-foreground border-yellow-200/40 hover:!bg-yellow-100/50 hover:!text-yellow-600 dark:border-yellow-700/40 dark:hover:!bg-yellow-900/50")
+                                  ? "border-yellow-600/40 bg-yellow-900/30 text-yellow-400 hover:bg-yellow-900/50"
+                                  : "text-muted-foreground border-yellow-700/40 hover:!bg-yellow-900/50 hover:!text-yellow-400")
                               }
                             >
                               <Star
                                 className={
                                   "size-4 " +
                                   (a.favorite
-                                    ? "fill-yellow-400 stroke-yellow-600 dark:fill-yellow-500 dark:stroke-yellow-400"
+                                    ? "fill-yellow-500 stroke-yellow-400"
                                     : "stroke-current")
                                 }
                               />
@@ -643,7 +636,7 @@ export function ApplicationsClient() {
                               onClick={() => openEditModal(a._id)}
                               aria-label="Edit"
                               title="Edit"
-                              className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-blue-50 hover:!text-blue-600 dark:border-yellow-700/40 dark:hover:!bg-blue-900/30 dark:hover:!text-blue-400"
+                              className="text-muted-foreground border-yellow-700/40 transition-colors hover:cursor-pointer hover:!bg-blue-900/30 hover:!text-blue-400"
                             >
                               <Pencil className="size-4 stroke-current" />
                             </Button>
@@ -657,7 +650,7 @@ export function ApplicationsClient() {
                               }}
                               aria-label="Delete"
                               title="Delete"
-                              className="text-muted-foreground border-yellow-200/40 transition-colors hover:cursor-pointer hover:!bg-red-50 hover:!text-red-600 dark:border-yellow-700/40 dark:hover:!bg-red-950/40 dark:hover:!text-red-400"
+                              className="text-muted-foreground border-yellow-700/40 transition-colors hover:cursor-pointer hover:!bg-red-950/40 hover:!text-red-400"
                             >
                               <Trash2 className="size-4 stroke-current" />
                             </Button>

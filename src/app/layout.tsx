@@ -5,7 +5,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
-import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,13 +33,11 @@ export default function RootLayout({
           <body
             className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col font-sans antialiased`}
           >
-            <ThemeProvider>
-              <Header />
-              <main className="from-background to-muted min-h-0 flex-1 bg-gradient-to-b">
-                {children}
-              </main>
-              <Footer />
-            </ThemeProvider>
+            <Header />
+            <main className="from-background to-muted min-h-0 flex-1 bg-gradient-to-b">
+              {children}
+            </main>
+            <Footer />
           </body>
         </html>
       </ConvexClientProvider>

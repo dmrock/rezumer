@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Star } from "lucide-react";
 
@@ -27,7 +26,7 @@ export function Header() {
   ];
 
   return (
-    <header className="bg-background border-border/60 sticky top-0 z-50 w-full border-b dark:bg-neutral-950">
+    <header className="bg-background border-border/60 sticky top-0 z-50 w-full border-b">
       <div className="relative mx-auto flex h-12 max-w-screen-2xl items-center justify-between gap-3 px-3 sm:gap-6 sm:px-5">
         <div className="flex min-w-0 items-center gap-3 sm:gap-6">
           {/* Brand */}
@@ -57,7 +56,7 @@ export function Header() {
                       key={item.href}
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      className={`relative inline-flex h-12 select-none items-center rounded-md px-3 text-sm font-medium no-underline transition-opacity duration-200 ease-linear ${
+                      className={`relative inline-flex h-12 items-center rounded-md px-3 text-sm font-medium no-underline transition-opacity duration-200 ease-linear select-none ${
                         active
                           ? "opacity-100"
                           : "opacity-60 hover:opacity-100 focus-visible:opacity-100"
@@ -65,7 +64,7 @@ export function Header() {
                     >
                       {item.label}
                       {active && (
-                        <span className="pointer-events-none absolute -bottom-px left-2 right-2 h-0.5 bg-[var(--color-foreground)]" />
+                        <span className="pointer-events-none absolute left-2 right-2 -bottom-px h-0.5 bg-[var(--color-foreground)]" />
                       )}
                     </Link>
                   );
@@ -100,7 +99,7 @@ export function Header() {
               asChild
               variant="outline"
               size="sm"
-              className="cursor-pointer border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+              className="cursor-pointer border-gray-700 hover:bg-gray-800"
             >
               <Link
                 href="https://github.com/dmrock/rezumer"
@@ -108,13 +107,11 @@ export function Header() {
                 rel="noopener noreferrer"
                 aria-label="Open the Rezumer repository on GitHub and leave a star"
               >
-                <Star className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                <Star className="h-4 w-4 text-gray-300" />
                 <span>Star us on GitHub</span>
               </Link>
             </Button>
           </div>
-
-          <ThemeToggle />
 
           <SignedIn>
             <UserButton

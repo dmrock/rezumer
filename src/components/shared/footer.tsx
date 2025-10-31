@@ -10,7 +10,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-white/40 backdrop-blur supports-[backdrop-filter]:bg-white/30 dark:bg-white/5">
+    <footer className="bg-white/5 backdrop-blur supports-[backdrop-filter]:bg-white/5">
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6">
         <div className="flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
           <p className="text-muted-foreground text-xs">© {year} Rezumer</p>

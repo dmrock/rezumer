@@ -29,7 +29,7 @@ Rezumer aims to give candidates a clean, transparent tool to manage their job se
 | -------------- | --------------------------------------------------------------------------- |
 | Frontend       | Next.js 15 (App Router), React 19                                           |
 | UI             | Tailwind CSS 4, Radix UI primitives, class-variance-authority, lucide-react |
-| Theming        | next-themes (light/dark)                                                    |
+| Theming        | Dark-only via Tailwind CSS v4 tokens (no theme toggle)                      |
 | Auth           | Clerk (`@clerk/nextjs`)                                                     |
 | Backend (BaaS) | Convex (functions + reactive queries)                                       |
 | Language       | TypeScript                                                                  |
@@ -156,7 +156,7 @@ test("has title", async ({ page }) => {
 });
 ```
 
-Future: add component/unit tests (React Testing Library + Vitest or Jest) and extend e2e coverage (auth flows, applications CRUD, dark mode toggle, errors, etc.).
+Future: add component/unit tests (React Testing Library + Vitest or Jest) and extend e2e coverage (auth flows, applications CRUD, dark UI, errors, etc.).
 
 ## Privacy
 
