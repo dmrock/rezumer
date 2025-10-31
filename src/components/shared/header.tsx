@@ -141,7 +141,7 @@ export function Header() {
         {mobileOpen && (
           <div
             id={mobilePanelId}
-            className="border-border/60 bg-background absolute top-full right-0 left-0 border-b shadow-md sm:hidden"
+            className="border-border/60 bg-background absolute left-0 right-0 top-full border-b shadow-md sm:hidden"
             aria-label="Mobile navigation"
           >
             <nav className="flex flex-col py-2" aria-label="Primary mobile">
