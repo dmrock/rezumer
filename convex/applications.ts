@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { CURRENCIES, currencyValidator } from "./shared";
 
 const STAGES = [
   "applied",
@@ -11,12 +12,7 @@ const STAGES = [
   "ghosted",
 ] as const;
 type Stage = (typeof STAGES)[number];
-
-export const CURRENCIES = ["USD", "EUR", "GBP"] as const;
 type Currency = (typeof CURRENCIES)[number];
-
-// Validator for currency field - use in schema and mutations
-export const currencyValidator = v.union(v.literal("USD"), v.literal("EUR"), v.literal("GBP"));
 
 export const listApplications = query({
   args: {},

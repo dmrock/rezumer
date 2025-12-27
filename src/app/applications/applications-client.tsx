@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { CURRENCIES } from "../../../convex/applications";
+import { CURRENCIES } from "../../../convex/shared";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -37,45 +37,92 @@ const STAGES = [
 type Stage = (typeof STAGES)[number];
 
 type Currency = (typeof CURRENCIES)[number];
+
+// Default currency used as fallback when detection fails or currency is not set
+const DEFAULT_CURRENCY: Currency = "USD";
+
 const CURRENCY_SYMBOLS: Record<Currency, string> = {
   USD: "$",
   EUR: "€",
   GBP: "£",
 };
 
+// Eurozone IANA timezones for timezone-based currency detection
+const EUROZONE_TIMEZONES = [
+  "Europe/Vienna", // Austria
+  "Europe/Brussels", // Belgium
+  "Europe/Nicosia", // Cyprus
+  "Europe/Tallinn", // Estonia
+  "Europe/Helsinki", // Finland
+  "Europe/Paris", // France
+  "Europe/Berlin", // Germany
+  "Europe/Athens", // Greece
+  "Europe/Dublin", // Ireland
+  "Europe/Rome", // Italy
+  "Europe/Riga", // Latvia
+  "Europe/Vilnius", // Lithuania
+  "Europe/Luxembourg", // Luxembourg
+  "Europe/Malta", // Malta
+  "Europe/Amsterdam", // Netherlands
+  "Europe/Lisbon", // Portugal
+  "Europe/Bratislava", // Slovakia
+  "Europe/Ljubljana", // Slovenia
+  "Europe/Madrid", // Spain
+  "Europe/Zagreb", // Croatia
+  "Atlantic/Canary", // Spain (Canary Islands)
+] as const;
+
+// ISO 3166-1 alpha-2 country codes for Eurozone members
+const EUROZONE_REGIONS = [
+  "AT",
+  "BE",
+  "CY",
+  "EE",
+  "FI",
+  "FR",
+  "DE",
+  "GR",
+  "IE",
+  "IT",
+  "LV",
+  "LT",
+  "LU",
+  "MT",
+  "NL",
+  "PT",
+  "SK",
+  "SI",
+  "ES",
+  "HR",
+] as const;
+
+// ISO 639-1 language codes commonly used in Eurozone countries.
+// Used as fallback when locale has no region suffix (e.g., "de" instead of "de-AT").
+const EUROZONE_LANGUAGE_CODES = [
+  "de", // German
+  "fr", // French
+  "es", // Spanish
+  "it", // Italian
+  "nl", // Dutch
+  "pt", // Portuguese
+  "el", // Greek
+  "fi", // Finnish
+  "sk", // Slovak
+  "sl", // Slovenian
+  "et", // Estonian
+  "lv", // Latvian
+  "lt", // Lithuanian
+] as const;
+
 // Detect default currency based on user's timezone (most reliable) or locale
-function getDefaultCurrency(): Currency {
-  if (typeof Intl === "undefined") return "USD";
+function detectDefaultCurrency(): Currency {
+  if (typeof Intl === "undefined") return DEFAULT_CURRENCY;
 
   // Try timezone first (more reliable than locale for physical location)
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    // Eurozone timezones
-    const eurozoneTimezones = [
-      "Europe/Vienna", // Austria
-      "Europe/Brussels", // Belgium
-      "Europe/Nicosia", // Cyprus
-      "Europe/Tallinn", // Estonia
-      "Europe/Helsinki", // Finland
-      "Europe/Paris", // France
-      "Europe/Berlin", // Germany
-      "Europe/Athens", // Greece
-      "Europe/Dublin", // Ireland
-      "Europe/Rome", // Italy
-      "Europe/Riga", // Latvia
-      "Europe/Vilnius", // Lithuania
-      "Europe/Luxembourg", // Luxembourg
-      "Europe/Malta", // Malta
-      "Europe/Amsterdam", // Netherlands
-      "Europe/Lisbon", // Portugal
-      "Europe/Bratislava", // Slovakia
-      "Europe/Ljubljana", // Slovenia
-      "Europe/Madrid", // Spain
-      "Europe/Zagreb", // Croatia
-      "Atlantic/Canary", // Spain (Canary Islands)
-    ];
-    if (eurozoneTimezones.includes(tz)) return "EUR";
+    if (EUROZONE_TIMEZONES.includes(tz as (typeof EUROZONE_TIMEZONES)[number])) return "EUR";
 
     // GBP timezones
     if (tz === "Europe/London" || tz === "Europe/Belfast") return "GBP";
@@ -84,51 +131,35 @@ function getDefaultCurrency(): Currency {
   }
 
   // Fallback to locale-based detection
-  if (typeof navigator === "undefined") return "USD";
+  if (typeof navigator === "undefined") return DEFAULT_CURRENCY;
   const locale = navigator.language || "en-US";
 
   // Extract region code (e.g., "AT" from "de-AT" or "en-AT")
   const regionMatch = locale.match(/-([A-Z]{2})$/i);
   const region = regionMatch ? regionMatch[1].toUpperCase() : null;
 
-  // Skip GB/UK region check here since timezone is more reliable
-
-  // Eurozone countries (by region code)
-  const eurozoneRegions = [
-    "AT",
-    "BE",
-    "CY",
-    "EE",
-    "FI",
-    "FR",
-    "DE",
-    "GR",
-    "IE",
-    "IT",
-    "LV",
-    "LT",
-    "LU",
-    "MT",
-    "NL",
-    "PT",
-    "SK",
-    "SI",
-    "ES",
-    "HR",
-  ];
-  if (region && eurozoneRegions.includes(region)) return "EUR";
+  if (region && EUROZONE_REGIONS.includes(region as (typeof EUROZONE_REGIONS)[number]))
+    return "EUR";
   if (region === "GB" || region === "UK") return "GBP";
 
   // Fallback: check language prefix for locales without region
   const lang = locale.split("-")[0].toLowerCase();
-  if (
-    ["de", "fr", "es", "it", "nl", "pt", "el", "fi", "sk", "sl", "et", "lv", "lt"].includes(lang)
-  ) {
+  if (EUROZONE_LANGUAGE_CODES.includes(lang as (typeof EUROZONE_LANGUAGE_CODES)[number])) {
     return "EUR";
   }
 
-  return "USD";
+  return DEFAULT_CURRENCY;
 }
+
+// Memoize default currency - computed once on first access
+let _defaultCurrency: Currency | null = null;
+function getDefaultCurrency(): Currency {
+  if (_defaultCurrency === null) {
+    _defaultCurrency = detectDefaultCurrency();
+  }
+  return _defaultCurrency;
+}
+
 const STAGE_META: Record<Stage, { label: string; className: string }> = {
   applied: {
     label: "Applied",
@@ -371,7 +402,7 @@ export function ApplicationsClient() {
       company: a.company,
       jobTitle: a.jobTitle,
       salary: a.salary != null ? String(a.salary) : "",
-      currency: (a.currency as Currency) || "USD",
+      currency: (a.currency as Currency) || DEFAULT_CURRENCY,
       stage: (a.stage as Stage) ?? "applied",
       date: a.date,
       notes: a.notes,
@@ -626,7 +657,7 @@ export function ApplicationsClient() {
                         <td className="align-center p-2">{a.jobTitle}</td>
                         <td className="align-center p-2">
                           {a.salary != null
-                            ? `${CURRENCY_SYMBOLS[(a.currency as Currency) || "USD"]}${Number(a.salary).toLocaleString()}`
+                            ? `${CURRENCY_SYMBOLS[(a.currency as Currency) || DEFAULT_CURRENCY]}${Number(a.salary).toLocaleString()}`
                             : "—"}
                         </td>
                         <td className="align-center p-2">

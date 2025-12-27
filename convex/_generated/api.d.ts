@@ -10,6 +10,7 @@
 
 import type * as applications from "../applications.js";
 import type * as resumes from "../resumes.js";
+import type * as shared from "../shared.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,6 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   applications: typeof applications;
   resumes: typeof resumes;
+  shared: typeof shared;
   users: typeof users;
 }>;
 
