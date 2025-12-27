@@ -144,7 +144,7 @@ export const updateApplication = mutation({
       company?: string;
       jobTitle?: string;
       salary?: number | undefined;
-      currency?: string;
+      currency?: Currency;
       stage?: string;
       date?: string;
       notes?: string;
