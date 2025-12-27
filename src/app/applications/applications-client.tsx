@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { CURRENCIES } from "../../../convex/applications";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -35,7 +36,6 @@ const STAGES = [
 ] as const;
 type Stage = (typeof STAGES)[number];
 
-const CURRENCIES = ["USD", "EUR", "GBP"] as const;
 type Currency = (typeof CURRENCIES)[number];
 const CURRENCY_SYMBOLS: Record<Currency, string> = {
   USD: "$",

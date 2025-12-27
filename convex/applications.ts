@@ -15,6 +15,13 @@ type Stage = (typeof STAGES)[number];
 export const CURRENCIES = ["USD", "EUR", "GBP"] as const;
 type Currency = (typeof CURRENCIES)[number];
 
+// Validator for currency field - use in schema and mutations
+export const currencyValidator = v.union(
+  v.literal("USD"),
+  v.literal("EUR"),
+  v.literal("GBP")
+);
+
 export const listApplications = query({
   args: {},
   handler: async (ctx) => {
@@ -43,7 +50,7 @@ export const createApplication = mutation({
     company: v.string(),
     jobTitle: v.string(),
     salary: v.optional(v.number()),
-    currency: v.optional(v.string()), // USD, EUR, GBP
+    currency: v.optional(currencyValidator),
     stage: v.string(), // validate against STAGES at runtime
     date: v.string(),
     notes: v.string(),
@@ -55,11 +62,6 @@ export const createApplication = mutation({
     // Basic stage validation
     if (!STAGES.includes(args.stage as Stage)) {
       throw new Error("Invalid stage value");
-    }
-
-    // Validate currency if provided
-    if (args.currency && !CURRENCIES.includes(args.currency as Currency)) {
-      throw new Error("Invalid currency value");
     }
 
     // Ensure user exists
@@ -117,7 +119,7 @@ export const updateApplication = mutation({
     company: v.optional(v.string()),
     jobTitle: v.optional(v.string()),
     salary: v.optional(v.number()),
-    currency: v.optional(v.string()), // USD, EUR, GBP
+    currency: v.optional(currencyValidator),
     clearSalary: v.optional(v.boolean()),
     stage: v.optional(v.string()),
     date: v.optional(v.string()),
@@ -139,10 +141,6 @@ export const updateApplication = mutation({
 
     if (args.stage && !STAGES.includes(args.stage as Stage)) {
       throw new Error("Invalid stage value");
-    }
-
-    if (args.currency && !CURRENCIES.includes(args.currency as Currency)) {
-      throw new Error("Invalid currency value");
     }
 
     // Build a typed patch object without using `any`
