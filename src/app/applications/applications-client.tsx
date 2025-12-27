@@ -47,8 +47,8 @@ const CURRENCY_SYMBOLS: Record<Currency, string> = {
   GBP: "£",
 };
 
-// Eurozone IANA timezones for timezone-based currency detection
-const EUROZONE_TIMEZONES = [
+// Eurozone IANA timezones for timezone-based currency detection (Set for O(1) lookup)
+const EUROZONE_TIMEZONES = new Set([
   "Europe/Vienna", // Austria
   "Europe/Brussels", // Belgium
   "Europe/Nicosia", // Cyprus
@@ -70,10 +70,10 @@ const EUROZONE_TIMEZONES = [
   "Europe/Madrid", // Spain
   "Europe/Zagreb", // Croatia
   "Atlantic/Canary", // Spain (Canary Islands)
-] as const;
+]);
 
-// ISO 3166-1 alpha-2 country codes for Eurozone members
-const EUROZONE_REGIONS = [
+// ISO 3166-1 alpha-2 country codes for Eurozone members (Set for O(1) lookup)
+const EUROZONE_REGIONS = new Set([
   "AT",
   "BE",
   "CY",
@@ -94,11 +94,11 @@ const EUROZONE_REGIONS = [
   "SI",
   "ES",
   "HR",
-] as const;
+]);
 
-// ISO 639-1 language codes commonly used in Eurozone countries.
+// ISO 639-1 language codes commonly used in Eurozone countries (Set for O(1) lookup).
 // Used as fallback when locale has no region suffix (e.g., "de" instead of "de-AT").
-const EUROZONE_LANGUAGE_CODES = [
+const EUROZONE_LANGUAGE_CODES = new Set([
   "de", // German
   "fr", // French
   "es", // Spanish
@@ -112,7 +112,7 @@ const EUROZONE_LANGUAGE_CODES = [
   "et", // Estonian
   "lv", // Latvian
   "lt", // Lithuanian
-] as const;
+]);
 
 // Detect default currency based on user's timezone (most reliable) or locale
 function detectDefaultCurrency(): Currency {
@@ -122,7 +122,7 @@ function detectDefaultCurrency(): Currency {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    if (EUROZONE_TIMEZONES.includes(tz as (typeof EUROZONE_TIMEZONES)[number])) return "EUR";
+    if (EUROZONE_TIMEZONES.has(tz)) return "EUR";
 
     // GBP timezones
     if (tz === "Europe/London" || tz === "Europe/Belfast") return "GBP";
@@ -138,13 +138,12 @@ function detectDefaultCurrency(): Currency {
   const regionMatch = locale.match(/-([A-Z]{2})$/i);
   const region = regionMatch ? regionMatch[1].toUpperCase() : null;
 
-  if (region && EUROZONE_REGIONS.includes(region as (typeof EUROZONE_REGIONS)[number]))
-    return "EUR";
+  if (region && EUROZONE_REGIONS.has(region)) return "EUR";
   if (region === "GB" || region === "UK") return "GBP";
 
   // Fallback: check language prefix for locales without region
   const lang = locale.split("-")[0].toLowerCase();
-  if (EUROZONE_LANGUAGE_CODES.includes(lang as (typeof EUROZONE_LANGUAGE_CODES)[number])) {
+  if (EUROZONE_LANGUAGE_CODES.has(lang)) {
     return "EUR";
   }
 
@@ -243,7 +242,7 @@ export function ApplicationsClient() {
     company: "",
     jobTitle: "",
     salary: "",
-    currency: getDefaultCurrency() as Currency,
+    currency: getDefaultCurrency(),
     stage: "applied",
     date: nowLocalYMD(),
     notes: "",

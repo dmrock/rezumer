@@ -93,7 +93,7 @@ export const createApplication = mutation({
       jobTitle: args.jobTitle,
       // Only include salary if provided
       ...(args.salary !== undefined ? { salary: args.salary } : {}),
-      // Only include currency if provided (defaults to USD on display)
+      // Only include currency if provided (client-side defaults to DEFAULT_CURRENCY)
       ...(args.currency ? { currency: args.currency } : {}),
       stage: args.stage,
       date: args.date,
