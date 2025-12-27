@@ -34,6 +34,101 @@ const STAGES = [
   "ghosted",
 ] as const;
 type Stage = (typeof STAGES)[number];
+
+const CURRENCIES = ["USD", "EUR", "GBP"] as const;
+type Currency = (typeof CURRENCIES)[number];
+const CURRENCY_SYMBOLS: Record<Currency, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+};
+
+// Detect default currency based on user's timezone (most reliable) or locale
+function getDefaultCurrency(): Currency {
+  if (typeof Intl === "undefined") return "USD";
+
+  // Try timezone first (more reliable than locale for physical location)
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Eurozone timezones
+    const eurozoneTimezones = [
+      "Europe/Vienna", // Austria
+      "Europe/Brussels", // Belgium
+      "Europe/Nicosia", // Cyprus
+      "Europe/Tallinn", // Estonia
+      "Europe/Helsinki", // Finland
+      "Europe/Paris", // France
+      "Europe/Berlin", // Germany
+      "Europe/Athens", // Greece
+      "Europe/Dublin", // Ireland
+      "Europe/Rome", // Italy
+      "Europe/Riga", // Latvia
+      "Europe/Vilnius", // Lithuania
+      "Europe/Luxembourg", // Luxembourg
+      "Europe/Malta", // Malta
+      "Europe/Amsterdam", // Netherlands
+      "Europe/Lisbon", // Portugal
+      "Europe/Bratislava", // Slovakia
+      "Europe/Ljubljana", // Slovenia
+      "Europe/Madrid", // Spain
+      "Europe/Zagreb", // Croatia
+      "Atlantic/Canary", // Spain (Canary Islands)
+    ];
+    if (eurozoneTimezones.includes(tz)) return "EUR";
+
+    // GBP timezones
+    if (tz === "Europe/London" || tz === "Europe/Belfast") return "GBP";
+  } catch {
+    // Ignore timezone detection errors
+  }
+
+  // Fallback to locale-based detection
+  if (typeof navigator === "undefined") return "USD";
+  const locale = navigator.language || "en-US";
+
+  // Extract region code (e.g., "AT" from "de-AT" or "en-AT")
+  const regionMatch = locale.match(/-([A-Z]{2})$/i);
+  const region = regionMatch ? regionMatch[1].toUpperCase() : null;
+
+  // Skip GB/UK region check here since timezone is more reliable
+
+  // Eurozone countries (by region code)
+  const eurozoneRegions = [
+    "AT",
+    "BE",
+    "CY",
+    "EE",
+    "FI",
+    "FR",
+    "DE",
+    "GR",
+    "IE",
+    "IT",
+    "LV",
+    "LT",
+    "LU",
+    "MT",
+    "NL",
+    "PT",
+    "SK",
+    "SI",
+    "ES",
+    "HR",
+  ];
+  if (region && eurozoneRegions.includes(region)) return "EUR";
+  if (region === "GB" || region === "UK") return "GBP";
+
+  // Fallback: check language prefix for locales without region
+  const lang = locale.split("-")[0].toLowerCase();
+  if (
+    ["de", "fr", "es", "it", "nl", "pt", "el", "fi", "sk", "sl", "et", "lv", "lt"].includes(lang)
+  ) {
+    return "EUR";
+  }
+
+  return "USD";
+}
 const STAGE_META: Record<Stage, { label: string; className: string }> = {
   applied: {
     label: "Applied",
@@ -117,6 +212,7 @@ export function ApplicationsClient() {
     company: "",
     jobTitle: "",
     salary: "",
+    currency: getDefaultCurrency() as Currency,
     stage: "applied",
     date: nowLocalYMD(),
     notes: "",
@@ -144,6 +240,7 @@ export function ApplicationsClient() {
         company: "",
         jobTitle: "",
         salary: "",
+        currency: getDefaultCurrency(),
         stage: "applied",
         date: nowLocalYMD(),
         notes: "",
@@ -209,6 +306,7 @@ export function ApplicationsClient() {
         stage: form.stage,
         date: form.date,
         notes: form.notes,
+        currency: form.currency,
       };
       const salaryPatch =
         parsedSalary !== undefined
@@ -253,6 +351,7 @@ export function ApplicationsClient() {
         company: "",
         jobTitle: "",
         salary: "",
+        currency: getDefaultCurrency(),
         stage: "applied",
         date: nowLocalYMD(),
         notes: "",
@@ -272,6 +371,7 @@ export function ApplicationsClient() {
       company: a.company,
       jobTitle: a.jobTitle,
       salary: a.salary != null ? String(a.salary) : "",
+      currency: (a.currency as Currency) || "USD",
       stage: (a.stage as Stage) ?? "applied",
       date: a.date,
       notes: a.notes,
@@ -308,6 +408,7 @@ export function ApplicationsClient() {
                 company: "",
                 jobTitle: "",
                 salary: "",
+                currency: getDefaultCurrency(),
                 stage: "applied",
                 date: nowLocalYMD(),
                 notes: "",
@@ -340,19 +441,35 @@ export function ApplicationsClient() {
               </div>
               <div className="md:col-span-2">
                 <label className="text-muted-foreground mb-1 block text-sm">Annual Salary</label>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  value={form.salary}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setForm((s) => ({ ...s, salary: val }));
-                    if (errors.salary) setErrors((prev) => ({ ...prev, salary: undefined }));
-                  }}
-                  placeholder="150000"
-                />
+                <div className="flex gap-1">
+                  <select
+                    className="border-input bg-background text-foreground ring-offset-background focus-visible:ring-ring flex h-10 w-16 shrink-0 items-center rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
+                    value={form.currency}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, currency: e.target.value as Currency }))
+                    }
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {CURRENCY_SYMBOLS[c]}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    value={form.salary}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((s) => ({ ...s, salary: val }));
+                      if (errors.salary) setErrors((prev) => ({ ...prev, salary: undefined }));
+                    }}
+                    placeholder="150000"
+                    className="flex-1"
+                  />
+                </div>
                 {errors.salary && <p className="mt-1 text-sm text-red-600">{errors.salary}</p>}
               </div>
               <div className="md:col-span-2">
@@ -508,7 +625,9 @@ export function ApplicationsClient() {
                         <td className="align-center p-2">{a.company}</td>
                         <td className="align-center p-2">{a.jobTitle}</td>
                         <td className="align-center p-2">
-                          {a.salary != null ? `${Number(a.salary).toLocaleString()}` : "—"}
+                          {a.salary != null
+                            ? `${CURRENCY_SYMBOLS[(a.currency as Currency) || "USD"]}${Number(a.salary).toLocaleString()}`
+                            : "—"}
                         </td>
                         <td className="align-center p-2">
                           <div className="relative flex items-center gap-2">

@@ -16,6 +16,7 @@ export default defineSchema({
     company: v.string(), // Company name
     jobTitle: v.string(), // Job title
     salary: v.optional(v.number()), // Salary (optional)
+    currency: v.optional(v.string()), // Currency code: USD, EUR, GBP (optional; defaults USD)
     stage: v.string(), // applied | cv_rejected | hr_call | interview | offer | rejected | ghosted
     date: v.string(), // Date of the stage
     notes: v.string(), // Optional notes

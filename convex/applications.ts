@@ -12,6 +12,9 @@ const STAGES = [
 ] as const;
 type Stage = (typeof STAGES)[number];
 
+export const CURRENCIES = ["USD", "EUR", "GBP"] as const;
+type Currency = (typeof CURRENCIES)[number];
+
 export const listApplications = query({
   args: {},
   handler: async (ctx) => {
@@ -40,6 +43,7 @@ export const createApplication = mutation({
     company: v.string(),
     jobTitle: v.string(),
     salary: v.optional(v.number()),
+    currency: v.optional(v.string()), // USD, EUR, GBP
     stage: v.string(), // validate against STAGES at runtime
     date: v.string(),
     notes: v.string(),
@@ -51,6 +55,11 @@ export const createApplication = mutation({
     // Basic stage validation
     if (!STAGES.includes(args.stage as Stage)) {
       throw new Error("Invalid stage value");
+    }
+
+    // Validate currency if provided
+    if (args.currency && !CURRENCIES.includes(args.currency as Currency)) {
+      throw new Error("Invalid currency value");
     }
 
     // Ensure user exists
@@ -90,6 +99,8 @@ export const createApplication = mutation({
       jobTitle: args.jobTitle,
       // Only include salary if provided
       ...(args.salary !== undefined ? { salary: args.salary } : {}),
+      // Only include currency if provided (defaults to USD on display)
+      ...(args.currency ? { currency: args.currency } : {}),
       stage: args.stage,
       date: args.date,
       notes: args.notes,
@@ -106,6 +117,7 @@ export const updateApplication = mutation({
     company: v.optional(v.string()),
     jobTitle: v.optional(v.string()),
     salary: v.optional(v.number()),
+    currency: v.optional(v.string()), // USD, EUR, GBP
     clearSalary: v.optional(v.boolean()),
     stage: v.optional(v.string()),
     date: v.optional(v.string()),
@@ -129,11 +141,16 @@ export const updateApplication = mutation({
       throw new Error("Invalid stage value");
     }
 
+    if (args.currency && !CURRENCIES.includes(args.currency as Currency)) {
+      throw new Error("Invalid currency value");
+    }
+
     // Build a typed patch object without using `any`
     const patch: {
       company?: string;
       jobTitle?: string;
       salary?: number | undefined;
+      currency?: string;
       stage?: string;
       date?: string;
       notes?: string;
@@ -142,6 +159,7 @@ export const updateApplication = mutation({
     if (args.company !== undefined) patch.company = args.company;
     if (args.jobTitle !== undefined) patch.jobTitle = args.jobTitle;
     if (args.salary !== undefined) patch.salary = args.salary;
+    if (args.currency !== undefined) patch.currency = args.currency;
     if (args.stage !== undefined) patch.stage = args.stage;
     if (args.date !== undefined) patch.date = args.date;
     if (args.notes !== undefined) patch.notes = args.notes;
