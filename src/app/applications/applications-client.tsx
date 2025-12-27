@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { CURRENCIES } from "../../../convex/shared";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,130 @@ const STAGES = [
   "ghosted",
 ] as const;
 type Stage = (typeof STAGES)[number];
+
+type Currency = (typeof CURRENCIES)[number];
+
+// Default currency used as fallback when detection fails or currency is not set
+const DEFAULT_CURRENCY: Currency = "USD";
+
+const CURRENCY_SYMBOLS: Record<Currency, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+};
+
+// Eurozone IANA timezones for timezone-based currency detection (Set for O(1) lookup)
+const EUROZONE_TIMEZONES = new Set([
+  "Europe/Vienna", // Austria
+  "Europe/Brussels", // Belgium
+  "Europe/Nicosia", // Cyprus
+  "Europe/Tallinn", // Estonia
+  "Europe/Helsinki", // Finland
+  "Europe/Paris", // France
+  "Europe/Berlin", // Germany
+  "Europe/Athens", // Greece
+  "Europe/Dublin", // Ireland
+  "Europe/Rome", // Italy
+  "Europe/Riga", // Latvia
+  "Europe/Vilnius", // Lithuania
+  "Europe/Luxembourg", // Luxembourg
+  "Europe/Malta", // Malta
+  "Europe/Amsterdam", // Netherlands
+  "Europe/Lisbon", // Portugal
+  "Europe/Bratislava", // Slovakia
+  "Europe/Ljubljana", // Slovenia
+  "Europe/Madrid", // Spain
+  "Europe/Zagreb", // Croatia
+  "Atlantic/Canary", // Spain (Canary Islands)
+]);
+
+// ISO 3166-1 alpha-2 country codes for Eurozone members (Set for O(1) lookup)
+const EUROZONE_REGIONS = new Set([
+  "AT",
+  "BE",
+  "CY",
+  "EE",
+  "FI",
+  "FR",
+  "DE",
+  "GR",
+  "IE",
+  "IT",
+  "LV",
+  "LT",
+  "LU",
+  "MT",
+  "NL",
+  "PT",
+  "SK",
+  "SI",
+  "ES",
+  "HR",
+]);
+
+// ISO 639-1 language codes commonly used in Eurozone countries (Set for O(1) lookup).
+// Used as fallback when locale has no region suffix (e.g., "de" instead of "de-AT").
+const EUROZONE_LANGUAGE_CODES = new Set([
+  "de", // German
+  "fr", // French
+  "es", // Spanish
+  "it", // Italian
+  "nl", // Dutch
+  "pt", // Portuguese
+  "el", // Greek
+  "fi", // Finnish
+  "sk", // Slovak
+  "sl", // Slovenian
+  "et", // Estonian
+  "lv", // Latvian
+  "lt", // Lithuanian
+]);
+
+// Detect default currency based on user's timezone (most reliable) or locale
+function detectDefaultCurrency(): Currency {
+  if (typeof Intl === "undefined") return DEFAULT_CURRENCY;
+
+  // Try timezone first (more reliable than locale for physical location)
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    if (EUROZONE_TIMEZONES.has(tz)) return "EUR";
+
+    // GBP timezones
+    if (tz === "Europe/London" || tz === "Europe/Belfast") return "GBP";
+  } catch {
+    // Ignore timezone detection errors
+  }
+
+  // Fallback to locale-based detection
+  if (typeof navigator === "undefined") return DEFAULT_CURRENCY;
+  const locale = navigator.language || "en-US";
+
+  // Extract region code (e.g., "AT" from "de-AT" or "en-AT")
+  const regionMatch = locale.match(/-([A-Z]{2})$/i);
+  const region = regionMatch ? regionMatch[1].toUpperCase() : null;
+
+  if (region && EUROZONE_REGIONS.has(region)) return "EUR";
+  if (region === "GB" || region === "UK") return "GBP";
+
+  // Fallback: check language prefix for locales without region
+  const lang = locale.split("-")[0].toLowerCase();
+  if (EUROZONE_LANGUAGE_CODES.has(lang)) {
+    return "EUR";
+  }
+
+  return DEFAULT_CURRENCY;
+}
+
+// Memoize default currency - computed once on first access
+let _defaultCurrency: Currency | null = null;
+function getDefaultCurrency(): Currency {
+  if (_defaultCurrency === null) {
+    _defaultCurrency = detectDefaultCurrency();
+  }
+  return _defaultCurrency;
+}
+
 const STAGE_META: Record<Stage, { label: string; className: string }> = {
   applied: {
     label: "Applied",
@@ -117,6 +242,7 @@ export function ApplicationsClient() {
     company: "",
     jobTitle: "",
     salary: "",
+    currency: getDefaultCurrency(),
     stage: "applied",
     date: nowLocalYMD(),
     notes: "",
@@ -144,6 +270,7 @@ export function ApplicationsClient() {
         company: "",
         jobTitle: "",
         salary: "",
+        currency: getDefaultCurrency(),
         stage: "applied",
         date: nowLocalYMD(),
         notes: "",
@@ -209,6 +336,7 @@ export function ApplicationsClient() {
         stage: form.stage,
         date: form.date,
         notes: form.notes,
+        currency: form.currency,
       };
       const salaryPatch =
         parsedSalary !== undefined
@@ -253,6 +381,7 @@ export function ApplicationsClient() {
         company: "",
         jobTitle: "",
         salary: "",
+        currency: getDefaultCurrency(),
         stage: "applied",
         date: nowLocalYMD(),
         notes: "",
@@ -272,6 +401,7 @@ export function ApplicationsClient() {
       company: a.company,
       jobTitle: a.jobTitle,
       salary: a.salary != null ? String(a.salary) : "",
+      currency: (a.currency as Currency) || DEFAULT_CURRENCY,
       stage: (a.stage as Stage) ?? "applied",
       date: a.date,
       notes: a.notes,
@@ -308,6 +438,7 @@ export function ApplicationsClient() {
                 company: "",
                 jobTitle: "",
                 salary: "",
+                currency: getDefaultCurrency(),
                 stage: "applied",
                 date: nowLocalYMD(),
                 notes: "",
@@ -340,19 +471,36 @@ export function ApplicationsClient() {
               </div>
               <div className="md:col-span-2">
                 <label className="text-muted-foreground mb-1 block text-sm">Annual Salary</label>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  value={form.salary}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setForm((s) => ({ ...s, salary: val }));
-                    if (errors.salary) setErrors((prev) => ({ ...prev, salary: undefined }));
-                  }}
-                  placeholder="150000"
-                />
+                <div className="flex gap-1">
+                  <select
+                    aria-label="Currency"
+                    className="border-input bg-background text-foreground ring-offset-background focus-visible:ring-ring flex h-10 w-16 shrink-0 items-center rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
+                    value={form.currency}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, currency: e.target.value as Currency }))
+                    }
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {CURRENCY_SYMBOLS[c]}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    value={form.salary}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((s) => ({ ...s, salary: val }));
+                      if (errors.salary) setErrors((prev) => ({ ...prev, salary: undefined }));
+                    }}
+                    placeholder="150000"
+                    className="flex-1"
+                  />
+                </div>
                 {errors.salary && <p className="mt-1 text-sm text-red-600">{errors.salary}</p>}
               </div>
               <div className="md:col-span-2">
@@ -508,7 +656,9 @@ export function ApplicationsClient() {
                         <td className="align-center p-2">{a.company}</td>
                         <td className="align-center p-2">{a.jobTitle}</td>
                         <td className="align-center p-2">
-                          {a.salary != null ? `${Number(a.salary).toLocaleString()}` : "—"}
+                          {a.salary != null
+                            ? `${CURRENCY_SYMBOLS[(a.currency as Currency) || DEFAULT_CURRENCY]}${Number(a.salary).toLocaleString()}`
+                            : "—"}
                         </td>
                         <td className="align-center p-2">
                           <div className="relative flex items-center gap-2">

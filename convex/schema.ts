@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { currencyValidator } from "./shared";
 
 export default defineSchema({
   // Users (synced with Clerk)
@@ -16,6 +17,7 @@ export default defineSchema({
     company: v.string(), // Company name
     jobTitle: v.string(), // Job title
     salary: v.optional(v.number()), // Salary (optional)
+    currency: v.optional(currencyValidator), // Currency code: USD, EUR, GBP
     stage: v.string(), // applied | cv_rejected | hr_call | interview | offer | rejected | ghosted
     date: v.string(), // Date of the stage
     notes: v.string(), // Optional notes

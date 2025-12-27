@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { CURRENCIES, currencyValidator } from "./shared";
 
 const STAGES = [
   "applied",
@@ -11,6 +12,7 @@ const STAGES = [
   "ghosted",
 ] as const;
 type Stage = (typeof STAGES)[number];
+type Currency = (typeof CURRENCIES)[number];
 
 export const listApplications = query({
   args: {},
@@ -40,6 +42,7 @@ export const createApplication = mutation({
     company: v.string(),
     jobTitle: v.string(),
     salary: v.optional(v.number()),
+    currency: v.optional(currencyValidator),
     stage: v.string(), // validate against STAGES at runtime
     date: v.string(),
     notes: v.string(),
@@ -90,6 +93,8 @@ export const createApplication = mutation({
       jobTitle: args.jobTitle,
       // Only include salary if provided
       ...(args.salary !== undefined ? { salary: args.salary } : {}),
+      // Only include currency if provided (client-side defaults to DEFAULT_CURRENCY)
+      ...(args.currency ? { currency: args.currency } : {}),
       stage: args.stage,
       date: args.date,
       notes: args.notes,
@@ -106,6 +111,7 @@ export const updateApplication = mutation({
     company: v.optional(v.string()),
     jobTitle: v.optional(v.string()),
     salary: v.optional(v.number()),
+    currency: v.optional(currencyValidator),
     clearSalary: v.optional(v.boolean()),
     stage: v.optional(v.string()),
     date: v.optional(v.string()),
@@ -134,6 +140,7 @@ export const updateApplication = mutation({
       company?: string;
       jobTitle?: string;
       salary?: number | undefined;
+      currency?: Currency;
       stage?: string;
       date?: string;
       notes?: string;
@@ -142,6 +149,7 @@ export const updateApplication = mutation({
     if (args.company !== undefined) patch.company = args.company;
     if (args.jobTitle !== undefined) patch.jobTitle = args.jobTitle;
     if (args.salary !== undefined) patch.salary = args.salary;
+    if (args.currency !== undefined) patch.currency = args.currency;
     if (args.stage !== undefined) patch.stage = args.stage;
     if (args.date !== undefined) patch.date = args.date;
     if (args.notes !== undefined) patch.notes = args.notes;
