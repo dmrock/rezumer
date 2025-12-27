@@ -473,6 +473,7 @@ export function ApplicationsClient() {
                 <label className="text-muted-foreground mb-1 block text-sm">Annual Salary</label>
                 <div className="flex gap-1">
                   <select
+                    aria-label="Currency"
                     className="border-input bg-background text-foreground ring-offset-background focus-visible:ring-ring flex h-10 w-16 shrink-0 items-center rounded-md border px-2 text-sm focus:ring-2 focus:outline-none"
                     value={form.currency}
                     onChange={(e) =>
