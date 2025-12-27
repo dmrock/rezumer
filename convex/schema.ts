@@ -2,11 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 // Currency validator - shared with applications.ts
-const currencyValidator = v.union(
-  v.literal("USD"),
-  v.literal("EUR"),
-  v.literal("GBP")
-);
+const currencyValidator = v.union(v.literal("USD"), v.literal("EUR"), v.literal("GBP"));
 
 export default defineSchema({
   // Users (synced with Clerk)
