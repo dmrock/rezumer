@@ -762,10 +762,10 @@ export default function EditResumePage() {
               <div>
                 <label className="mb-2 block text-sm font-medium">Website</label>
                 <Input
-                  type="url"
+                  type="text"
                   value={formData.website}
                   onChange={(e) => updateField("website", e.target.value)}
-                  placeholder="https://johndoe.com"
+                  placeholder="johndoe.com"
                 />
               </div>
 

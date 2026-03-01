@@ -35,10 +35,21 @@ export interface ResumeData {
   }>;
 }
 
-const PAGE_WIDTH = 210; // A4 width in mm
-const PAGE_HEIGHT = 297; // A4 height in mm
-const MARGIN = 15;
+const PAGE_WIDTH = 210;
+const PAGE_HEIGHT = 297;
+const MARGIN = 16;
 const MAX_WIDTH = PAGE_WIDTH - 2 * MARGIN;
+const HEADER_HEIGHT = 44;
+
+// Color palette
+const C_HEADER_BG = "#0f172a"; // slate-900
+const C_ACCENT = "#3b82f6"; // blue-500
+const C_ACCENT_STRIPE = "#1d4ed8"; // blue-700
+const C_TEXT = "#1e293b"; // slate-800
+const C_SECONDARY = "#64748b"; // slate-500
+const C_RULE = "#cbd5e1"; // slate-300
+const C_WHITE = "#ffffff";
+const C_HEADER_CONTACT = "#94a3b8"; // slate-400
 
 export function generateResumePDF(data: ResumeData): Blob {
   const doc = new jsPDF({
@@ -47,204 +58,229 @@ export function generateResumePDF(data: ResumeData): Blob {
     format: "a4",
   });
 
-  let yPosition = MARGIN;
-  const lineHeight = 5;
-  const sectionSpacing = 6;
+  let y = 0;
 
-  // Helper function to add text with word wrapping and automatic page breaks
-  const addText = (
+  // ─── Header block ────────────────────────────────────────────────────────────
+
+  doc.setFillColor(C_HEADER_BG);
+  doc.rect(0, 0, PAGE_WIDTH, HEADER_HEIGHT, "F");
+
+  // Accent stripe at the bottom of the header
+  doc.setFillColor(C_ACCENT_STRIPE);
+  doc.rect(0, HEADER_HEIGHT - 2.5, PAGE_WIDTH, 2.5, "F");
+
+  // Left accent bar
+  doc.setFillColor(C_ACCENT);
+  doc.rect(0, 0, 4, HEADER_HEIGHT - 2.5, "F");
+
+  // Name
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(C_WHITE);
+  doc.text(data.fullName, MARGIN + 4, 18);
+
+  // Contact row 1
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(C_HEADER_CONTACT);
+  const contact1 = [data.email, data.phone, data.location]
+    .filter(Boolean)
+    .join("   ·   ");
+  doc.text(contact1, MARGIN + 4, 28);
+
+  // Contact row 2 (links)
+  const contact2 = [data.website, data.linkedin, data.github]
+    .filter(Boolean)
+    .map((url) => stripProtocol(url!))
+    .join("   ·   ");
+  if (contact2) {
+    doc.text(contact2, MARGIN + 4, 35);
+  }
+
+  y = HEADER_HEIGHT + 9;
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > PAGE_HEIGHT - MARGIN) {
+      doc.addPage();
+      y = MARGIN;
+    }
+  };
+
+  const addSectionHeader = (title: string) => {
+    ensureSpace(18);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(C_ACCENT);
+    doc.text(title, MARGIN, y);
+    y += 2.5;
+
+    // Divider rule
+    doc.setDrawColor(C_RULE);
+    doc.setLineWidth(0.4);
+    doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+    y += 5;
+
+    doc.setTextColor(C_TEXT);
+  };
+
+  const addWrappedText = (
     text: string,
     fontSize: number,
-    style: "normal" | "bold" = "normal",
-    maxWidth: number = MAX_WIDTH,
-  ): boolean => {
+    style: "normal" | "bold" | "italic" = "normal",
+    color: string = C_TEXT,
+    indent: number = 0,
+  ) => {
+    const usableWidth = MAX_WIDTH - indent;
     doc.setFontSize(fontSize);
     doc.setFont("helvetica", style);
+    doc.setTextColor(color);
 
-    const lines = doc.splitTextToSize(text, maxWidth);
-
-    for (let i = 0; i < lines.length; i++) {
-      const lineY = yPosition;
-
-      // Check if current line fits on current page
-      if (lineY + lineHeight > PAGE_HEIGHT - MARGIN) {
-        // Need new page
+    const lines = doc.splitTextToSize(text, usableWidth) as string[];
+    for (const line of lines) {
+      if (y + 5 > PAGE_HEIGHT - MARGIN) {
         doc.addPage();
-        yPosition = MARGIN; // Reset to top of new page
-
-        // Restore font settings after page break
+        y = MARGIN;
         doc.setFontSize(fontSize);
         doc.setFont("helvetica", style);
+        doc.setTextColor(color);
       }
-
-      // Draw the line
-      doc.text(lines[i], MARGIN, yPosition);
-      yPosition += lineHeight;
-    }
-
-    return true; // All content successfully rendered
-  };
-
-  // Helper to add a line break
-  const addSpace = (space: number = lineHeight) => {
-    yPosition += space;
-  };
-
-  // Helper to check if we need a new page for a section header
-  const ensureSpace = (minSpace: number) => {
-    if (yPosition + minSpace > PAGE_HEIGHT - MARGIN) {
-      doc.addPage();
-      yPosition = MARGIN;
+      doc.text(line, MARGIN + indent, y);
+      y += 5;
     }
   };
 
-  // Header - Name
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text(data.fullName, MARGIN, yPosition);
-  yPosition += 7;
+  // ─── Professional Summary ─────────────────────────────────────────────────────
 
-  // Contact Information (wrapped)
-  const contactLine1Text = [data.email, data.phone, data.location].filter(Boolean).join(" • ");
-  addText(contactLine1Text, 9, "normal");
-
-  const contactLine2Text = [data.website, data.linkedin, data.github].filter(Boolean).join(" • ");
-  if (contactLine2Text) {
-    addText(contactLine2Text, 9, "normal");
-  } else {
-    addSpace(1);
+  if (data.summary?.trim()) {
+    addSectionHeader("PROFESSIONAL SUMMARY");
+    addWrappedText(data.summary, 9);
+    y += 5;
   }
 
-  addSpace(2);
+  // ─── Work Experience ──────────────────────────────────────────────────────────
 
-  // Professional Summary (if exists)
-  if (data.summary && data.summary.trim()) {
-    ensureSpace(15); // Ensure space for header + some content
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("PROFESSIONAL SUMMARY", MARGIN, yPosition);
-    yPosition += 5;
+  if (data.experience.length > 0) {
+    addSectionHeader("WORK EXPERIENCE");
 
-    addText(data.summary, 9, "normal");
-    addSpace(sectionSpacing);
-  }
+    for (const exp of data.experience) {
+      ensureSpace(18);
 
-  // Work Experience
-  ensureSpace(15); // Ensure space for section header
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("WORK EXPERIENCE", MARGIN, yPosition);
-  yPosition += 5;
-
-  for (const exp of data.experience) {
-    // Ensure space for at least title + company
-    ensureSpace(15);
-
-    // Job Title & Dates
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    const dateRange = `${formatDate(exp.startDate)} - ${exp.endDate ? formatDate(exp.endDate) : "Present"}`;
-    doc.text(exp.jobTitle, MARGIN, yPosition);
-    doc.text(dateRange, PAGE_WIDTH - MARGIN, yPosition, { align: "right" });
-    yPosition += 4;
-
-    // Company & Location
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "italic");
-    const companyInfo = exp.location ? `${exp.company}, ${exp.location}` : exp.company;
-    doc.text(companyInfo, MARGIN, yPosition);
-    yPosition += 4;
-
-    // Description
-    addText(exp.description, 9, "normal");
-    addSpace(4);
-  }
-
-  addSpace(sectionSpacing);
-
-  // Education
-  ensureSpace(15); // Ensure space for section header
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("EDUCATION", MARGIN, yPosition);
-  yPosition += 5;
-
-  for (const edu of data.education) {
-    ensureSpace(12); // Ensure space for degree + institution
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text(edu.degree, MARGIN, yPosition);
-    doc.text(formatDate(edu.graduationDate), PAGE_WIDTH - MARGIN, yPosition, {
-      align: "right",
-    });
-    yPosition += 4;
-
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "italic");
-    const eduInfo = edu.location ? `${edu.institution}, ${edu.location}` : edu.institution;
-    doc.text(eduInfo, MARGIN, yPosition);
-    yPosition += 4;
-    addSpace(2);
-  }
-
-  addSpace(sectionSpacing);
-
-  // Skills
-  if (data.skills.length > 0) {
-    ensureSpace(15); // Ensure space for section header
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("SKILLS", MARGIN, yPosition);
-    yPosition += 5;
-
-    const skillsText = data.skills.join(" • ");
-    addText(skillsText, 9, "normal");
-    addSpace(sectionSpacing);
-  }
-
-  // Languages (if exists and space available)
-  if (data.languages && data.languages.length > 0) {
-    ensureSpace(15); // Ensure space for section header
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("LANGUAGES", MARGIN, yPosition);
-    yPosition += 5;
-
-    const languagesText = data.languages
-      .map((lang) => `${lang.language} (${lang.proficiency})`)
-      .join(" • ");
-    addText(languagesText, 9, "normal");
-    addSpace(sectionSpacing);
-  }
-
-  // Certifications (if exists and space available)
-  if (data.certifications && data.certifications.length > 0) {
-    ensureSpace(15); // Ensure space for section header
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("CERTIFICATIONS", MARGIN, yPosition);
-    yPosition += 5;
-
-    for (const cert of data.certifications) {
-      ensureSpace(10); // Ensure space for cert entry
-
-      doc.setFontSize(9);
+      // Job title (bold) + date range (right-aligned, secondary)
+      const dateRange = `${formatDate(exp.startDate)} – ${exp.endDate ? formatDate(exp.endDate) : "Present"}`;
       doc.setFont("helvetica", "bold");
-      doc.text(cert.name, MARGIN, yPosition);
-      yPosition += 4;
+      doc.setFontSize(10);
+      doc.setTextColor(C_TEXT);
+      doc.text(exp.jobTitle, MARGIN, y);
 
       doc.setFont("helvetica", "normal");
-      doc.text(`${cert.issuer} - ${cert.date}`, MARGIN, yPosition);
-      yPosition += 4;
+      doc.setFontSize(8.5);
+      doc.setTextColor(C_SECONDARY);
+      doc.text(dateRange, PAGE_WIDTH - MARGIN, y, { align: "right" });
+      y += 4.5;
+
+      // Company · location (italic, secondary)
+      const companyLine = exp.location
+        ? `${exp.company}  ·  ${exp.location}`
+        : exp.company;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8.5);
+      doc.setTextColor(C_SECONDARY);
+      doc.text(companyLine, MARGIN, y);
+      y += 5;
+
+      // Description
+      addWrappedText(exp.description, 8.5, "normal", C_TEXT);
+      y += 4;
+    }
+
+    y += 1;
+  }
+
+  // ─── Education ───────────────────────────────────────────────────────────────
+
+  if (data.education.length > 0) {
+    addSectionHeader("EDUCATION");
+
+    for (const edu of data.education) {
+      ensureSpace(14);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(C_TEXT);
+      doc.text(edu.degree, MARGIN, y);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(C_SECONDARY);
+      doc.text(formatDate(edu.graduationDate), PAGE_WIDTH - MARGIN, y, {
+        align: "right",
+      });
+      y += 4.5;
+
+      const eduLine = edu.location
+        ? `${edu.institution}  ·  ${edu.location}`
+        : edu.institution;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8.5);
+      doc.setTextColor(C_SECONDARY);
+      doc.text(eduLine, MARGIN, y);
+      y += 7;
+    }
+
+    y += 1;
+  }
+
+  // ─── Skills ───────────────────────────────────────────────────────────────────
+
+  if (data.skills.length > 0) {
+    addSectionHeader("SKILLS");
+    addWrappedText(data.skills.join("   ·   "), 9, "normal", C_TEXT);
+    y += 5;
+  }
+
+  // ─── Languages ───────────────────────────────────────────────────────────────
+
+  if (data.languages && data.languages.length > 0) {
+    addSectionHeader("LANGUAGES");
+    const langText = data.languages
+      .map((l) => `${l.language} (${l.proficiency})`)
+      .join("   ·   ");
+    addWrappedText(langText, 9, "normal", C_TEXT);
+    y += 5;
+  }
+
+  // ─── Certifications ───────────────────────────────────────────────────────────
+
+  if (data.certifications && data.certifications.length > 0) {
+    addSectionHeader("CERTIFICATIONS");
+
+    for (const cert of data.certifications) {
+      ensureSpace(12);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(C_TEXT);
+      doc.text(cert.name, MARGIN, y);
+      y += 4.5;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(C_SECONDARY);
+      doc.text(`${cert.issuer}  ·  ${cert.date}`, MARGIN, y);
+      y += 6;
     }
   }
 
   return doc.output("blob");
 }
 
+function stripProtocol(url: string): string {
+  return url.replace(/^https?:\/\//, "");
+}
+
 function formatDate(dateStr: string): string {
-  // dateStr is in format YYYY-MM from input type="month"
   if (!dateStr) return "";
   const [year, month] = dateStr.split("-");
   const monthNames = [
