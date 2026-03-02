@@ -1,8 +1,7 @@
 import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
-
-const MAX_RESUMES = 5;
+import { MAX_RESUMES } from "./shared";
 
 const DESIGN_TEMPLATES = ["modern"] as const;
 type DesignTemplate = (typeof DESIGN_TEMPLATES)[number];

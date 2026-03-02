@@ -1,39 +1,7 @@
 import { jsPDF } from "jspdf";
+import type { ResumeFields } from "./types";
 
-export interface ResumeData {
-  fullName: string;
-  email: string;
-  phone: string;
-  location?: string;
-  website?: string;
-  linkedin?: string;
-  github?: string;
-  summary?: string;
-  experience: Array<{
-    jobTitle: string;
-    company: string;
-    location?: string;
-    startDate: string;
-    endDate?: string;
-    description: string;
-  }>;
-  education: Array<{
-    degree: string;
-    institution: string;
-    location?: string;
-    graduationDate: string;
-  }>;
-  skills: string[];
-  languages?: Array<{
-    language: string;
-    proficiency: string;
-  }>;
-  certifications?: Array<{
-    name: string;
-    issuer: string;
-    date: string;
-  }>;
-}
+export type ResumeData = ResumeFields;
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
@@ -83,9 +51,7 @@ export function generateResumePDF(data: ResumeData): Blob {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(C_HEADER_CONTACT);
-  const contact1 = [data.email, data.phone, data.location]
-    .filter(Boolean)
-    .join("   ·   ");
+  const contact1 = [data.email, data.phone, data.location].filter(Boolean).join("   ·   ");
   doc.text(contact1, MARGIN + 4, 28);
 
   // Contact row 2 (links)
@@ -181,9 +147,7 @@ export function generateResumePDF(data: ResumeData): Blob {
       y += 4.5;
 
       // Company · location (italic, secondary)
-      const companyLine = exp.location
-        ? `${exp.company}  ·  ${exp.location}`
-        : exp.company;
+      const companyLine = exp.location ? `${exp.company}  ·  ${exp.location}` : exp.company;
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8.5);
       doc.setTextColor(C_SECONDARY);
@@ -219,9 +183,7 @@ export function generateResumePDF(data: ResumeData): Blob {
       });
       y += 4.5;
 
-      const eduLine = edu.location
-        ? `${edu.institution}  ·  ${edu.location}`
-        : edu.institution;
+      const eduLine = edu.location ? `${edu.institution}  ·  ${edu.location}` : edu.institution;
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8.5);
       doc.setTextColor(C_SECONDARY);
@@ -244,9 +206,7 @@ export function generateResumePDF(data: ResumeData): Blob {
 
   if (data.languages && data.languages.length > 0) {
     addSectionHeader("LANGUAGES");
-    const langText = data.languages
-      .map((l) => `${l.language} (${l.proficiency})`)
-      .join("   ·   ");
+    const langText = data.languages.map((l) => `${l.language} (${l.proficiency})`).join("   ·   ");
     addWrappedText(langText, 9, "normal", C_TEXT);
     y += 5;
   }

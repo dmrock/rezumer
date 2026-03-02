@@ -1,18 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { CURRENCIES, currencyValidator } from "./shared";
-
-const STAGES = [
-  "applied",
-  "cv_rejected",
-  "hr_call",
-  "interview",
-  "offer",
-  "rejected",
-  "ghosted",
-] as const;
-type Stage = (typeof STAGES)[number];
-type Currency = (typeof CURRENCIES)[number];
+import { STAGES, MAX_APPLICATIONS, currencyValidator } from "./shared";
+import type { Stage, Currency } from "./shared";
 
 export const listApplications = query({
   args: {},
@@ -73,8 +62,7 @@ export const createApplication = mutation({
       user = await ctx.db.get(userId);
     }
 
-    // Enforce per-user application limit (200). Limit the query to avoid scanning all docs.
-    const MAX_APPLICATIONS = 200;
+    // Enforce per-user application limit. Limit the query to avoid scanning all docs.
     const existing = await ctx.db
       .query("applications")
       .withIndex("by_user", (q) => q.eq("userId", user!._id))

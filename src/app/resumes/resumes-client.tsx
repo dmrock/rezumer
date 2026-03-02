@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Download, Pencil, Trash2, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { Toast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  MSG_PDF_NOT_READY,
+  MSG_RESUME_DELETE_FAILED,
+  MSG_CONFIRM_DELETE_RESUME,
+} from "@/lib/messages";
+import { MAX_RESUMES } from "@/lib/constants";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
 type ResumeDoc = Doc<"resumes">;
@@ -15,19 +24,22 @@ function ResumeCard({
   resume,
   onEdit,
   onDelete,
+  showToast,
 }: {
   resume: ResumeDoc;
   onEdit: () => void;
   onDelete: () => void;
+  showToast: (msg: string, type?: "error" | "success") => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const pdfUrl = useQuery(api.resumes.getResumePdfUrl, {
     resumeId: resume._id,
   });
 
   const handleDownload = () => {
     if (!pdfUrl) {
-      alert("PDF not generated yet. Please try again later.");
+      showToast(MSG_PDF_NOT_READY);
       return;
     }
 
@@ -40,67 +52,74 @@ function ResumeCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this resume?")) return;
-
     setIsDeleting(true);
     try {
       await onDelete();
-      // Success - isDeleting will be cleared when component unmounts
-      // or by the finally block if there's an error
     } catch {
-      // Error already handled by parent handleDelete
-      // Just ensure we reset the deleting state
+      // Error handled by parent
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-            <FileText className="text-primary h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-foreground truncate font-semibold">{resume.title}</h3>
-            <p className="text-muted-foreground text-xs">{resume.fields.fullName}</p>
+    <>
+      <Card className="p-6">
+        <div className="mb-4 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
+              <FileText className="text-primary h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-foreground truncate font-semibold">{resume.title}</h3>
+              <p className="text-muted-foreground text-xs">{resume.fields.fullName}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="text-muted-foreground mb-4 space-y-1 text-sm">
-        <p>Email: {resume.fields.email}</p>
-        <p>Phone: {resume.fields.phone}</p>
-        {resume.fields.location && <p>Location: {resume.fields.location}</p>}
-        <p className="pt-2 text-xs">Updated: {new Date(resume.updatedAt).toLocaleDateString()}</p>
-      </div>
+        <div className="text-muted-foreground mb-4 space-y-1 text-sm">
+          <p>Email: {resume.fields.email}</p>
+          <p>Phone: {resume.fields.phone}</p>
+          {resume.fields.location && <p>Location: {resume.fields.location}</p>}
+          <p className="pt-2 text-xs">Updated: {new Date(resume.updatedAt).toLocaleDateString()}</p>
+        </div>
 
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDownload}
-          className="flex-1 cursor-pointer"
-          disabled={!resume.pdfStorageId}
-        >
-          <Download className="mr-1 h-4 w-4" />
-          Download
-        </Button>
-        <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer">
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="text-destructive hover:text-destructive cursor-pointer"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </Card>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            className="flex-1 cursor-pointer"
+            disabled={!resume.pdfStorageId}
+          >
+            <Download className="mr-1 h-4 w-4" />
+            Download
+          </Button>
+          <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirmOpen(true)}
+            disabled={isDeleting}
+            className="text-destructive hover:text-destructive cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </Card>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Resume"
+        description={MSG_CONFIRM_DELETE_RESUME}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }
 
@@ -108,17 +127,13 @@ export function ResumesClient() {
   const router = useRouter();
   const resumes = useQuery(api.resumes.listResumes) as ResumeDoc[] | undefined;
   const deleteResume = useMutation(api.resumes.deleteResume);
+  const { toast, showToast } = useToast();
 
   const handleDelete = async (resumeId: Id<"resumes">) => {
     try {
       await deleteResume({ resumeId });
-    } catch (error: unknown) {
-      console.error("Failed to delete resume:", error);
-      alert(
-        "Failed to delete resume. Please try again or contact support if the problem persists.",
-      );
-      // Rethrow to let the caller know deletion failed
-      throw error;
+    } catch {
+      showToast(MSG_RESUME_DELETE_FAILED);
     }
   };
 
@@ -132,7 +147,8 @@ export function ResumesClient() {
 
   return (
     <div className="space-y-6">
-      {/* Resumes Grid */}
+      <Toast toast={toast} />
+
       {resumes.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {resumes.map((resume) => (
@@ -141,6 +157,7 @@ export function ResumesClient() {
               resume={resume}
               onEdit={() => router.push(`/resumes/${resume._id}/edit`)}
               onDelete={() => handleDelete(resume._id)}
+              showToast={showToast}
             />
           ))}
         </div>
@@ -156,12 +173,11 @@ export function ResumesClient() {
         </div>
       )}
 
-      {/* Limit reached message */}
-      {resumes.length >= 5 && (
+      {resumes.length >= MAX_RESUMES && (
         <div className="rounded-lg border border-amber-900 bg-amber-950/20 p-4">
           <p className="text-sm text-amber-200">
-            You&apos;ve reached the maximum of 5 resumes. Please delete a resume to create a new
-            one.
+            You&apos;ve reached the maximum of {MAX_RESUMES} resumes. Please delete a resume to
+            create a new one.
           </p>
         </div>
       )}
