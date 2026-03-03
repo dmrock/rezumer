@@ -95,7 +95,7 @@ function ResumeCard({
             <Download className="mr-1 h-4 w-4" />
             Download
           </Button>
-          <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer">
+          <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer" aria-label="Edit resume">
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -104,6 +104,7 @@ function ResumeCard({
             onClick={() => setConfirmOpen(true)}
             disabled={isDeleting}
             className="text-destructive hover:text-destructive cursor-pointer"
+            aria-label="Delete resume"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

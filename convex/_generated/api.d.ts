@@ -12,6 +12,7 @@ import type * as applications from "../applications.js";
 import type * as resumes from "../resumes.js";
 import type * as seed from "../seed.js";
 import type * as shared from "../shared.js";
+import type * as testing from "../testing.js";
 import type * as users from "../users.js";
 
 import type {
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   resumes: typeof resumes;
   seed: typeof seed;
   shared: typeof shared;
+  testing: typeof testing;
   users: typeof users;
 }>;
 
