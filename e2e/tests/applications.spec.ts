@@ -37,9 +37,7 @@ test("renders the applications page", async ({ applicationsPage }) => {
   await expect(applicationsPage.thisMonthRadio).toBeVisible();
 });
 
-test("add application modal — cancel and submit with all fields", async ({
-  applicationsPage,
-}) => {
+test("add application modal — cancel and submit with all fields", async ({ applicationsPage }) => {
   const company = `${uid()}_Google`;
 
   // Open and cancel — modal closes.
@@ -81,7 +79,9 @@ test("edits an existing application", async ({ applicationsPage }) => {
   await applicationsPage.submitAddForm();
 
   await applicationsPage.clickEdit(company);
-  await expect(applicationsPage.page.getByRole("heading", { name: "Edit application" })).toBeVisible();
+  await expect(
+    applicationsPage.page.getByRole("heading", { name: "Edit application" }),
+  ).toBeVisible();
   await applicationsPage.jobTitleInput.clear();
   await applicationsPage.jobTitleInput.fill(updatedTitle);
   await applicationsPage.submitEditForm();

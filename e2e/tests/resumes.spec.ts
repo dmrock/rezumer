@@ -66,14 +66,20 @@ test("can add and remove experience, education, and skill entries", async ({ pag
   // Experience: use CSS :has(> child) to target the flex row that directly contains
   // the section heading — avoids traversing up the tree.
   // Remove buttons are icon-only; scoped the same way via the entry label's flex row.
-  await page.locator('div:has(> h3:text("Work Experience"))').getByRole("button", { name: "Add" }).click();
+  await page
+    .locator('div:has(> h3:text("Work Experience"))')
+    .getByRole("button", { name: "Add" })
+    .click();
   const jobTitleFields = page.locator('[placeholder="Job Title"]');
   await expect(jobTitleFields).toHaveCount(2);
   await page.locator('div:has(> span:text("Experience 2"))').getByRole("button").click();
   await expect(jobTitleFields).toHaveCount(1);
 
   // Education: same pattern.
-  await page.locator('div:has(> h3:text("Education"))').getByRole("button", { name: "Add" }).click();
+  await page
+    .locator('div:has(> h3:text("Education"))')
+    .getByRole("button", { name: "Add" })
+    .click();
   const degreeFields = page.locator('[placeholder*="Degree"]');
   await expect(degreeFields).toHaveCount(2);
   await page.locator('div:has(> span:text("Education 2"))').getByRole("button").click();

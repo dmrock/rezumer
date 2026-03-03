@@ -95,7 +95,13 @@ function ResumeCard({
             <Download className="mr-1 h-4 w-4" />
             Download
           </Button>
-          <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer" aria-label="Edit resume">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="cursor-pointer"
+            aria-label="Edit resume"
+          >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button

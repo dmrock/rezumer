@@ -106,7 +106,10 @@ export default async function globalSetup(config: FullConfig) {
       return null;
     });
 
-    if (!convexToken) throw new Error("global-setup: could not retrieve Convex token — cleanup skipped and tests will likely fail");
+    if (!convexToken)
+      throw new Error(
+        "global-setup: could not retrieve Convex token — cleanup skipped and tests will likely fail",
+      );
 
     if (convexToken) {
       const convex = new ConvexHttpClient(convexUrl);

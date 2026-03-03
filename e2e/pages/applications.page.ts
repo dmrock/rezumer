@@ -1,61 +1,34 @@
-import { type Page, type Locator } from "@playwright/test";
+import { type Locator } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ApplicationsPage extends BasePage {
   // ── Header ────────────────────────────────────────────────────────────────
-  readonly addApplicationBtn: Locator;
+  readonly addApplicationBtn = this.page.getByRole("button", { name: "Add Application" });
 
   // ── Stats ─────────────────────────────────────────────────────────────────
-  readonly allTimeRadio: Locator;
-  readonly thisMonthRadio: Locator;
+  readonly allTimeRadio = this.page.getByRole("radio", { name: "All time" });
+  readonly thisMonthRadio = this.page.getByRole("radio", { name: "This month" });
 
   // ── Filters ───────────────────────────────────────────────────────────────
-  readonly allFilterRadio: Locator;
-  readonly favoritesFilterRadio: Locator;
+  readonly allFilterRadio = this.page.getByRole("radio", { name: "All", exact: true });
+  readonly favoritesFilterRadio = this.page.getByRole("radio", { name: "Favorites" });
 
   // ── Table ─────────────────────────────────────────────────────────────────
-  readonly table: Locator;
-  readonly dateColumnSortBtn: Locator;
+  readonly table = this.page.locator("table");
+  readonly dateColumnSortBtn = this.page.getByRole("button", { name: /sort by date/i });
 
   // ── Modal ─────────────────────────────────────────────────────────────────
-  readonly modal: Locator;
-  readonly companyInput: Locator;
-  readonly jobTitleInput: Locator;
-  readonly salaryInput: Locator;
-  readonly currencySelect: Locator;
-  readonly stageSelect: Locator;
-  readonly dateInput: Locator;
-  readonly notesTextarea: Locator;
-  readonly addBtn: Locator;
-  readonly saveBtn: Locator;
-  readonly cancelBtn: Locator;
-
-  constructor(page: Page) {
-    super(page);
-    this.addApplicationBtn = page.getByRole("button", { name: "Add Application" });
-
-    this.allTimeRadio = page.getByRole("radio", { name: "All time" });
-    this.thisMonthRadio = page.getByRole("radio", { name: "This month" });
-    this.allFilterRadio = page.getByRole("radio", { name: "All", exact: true });
-    this.favoritesFilterRadio = page.getByRole("radio", { name: "Favorites" });
-
-    this.table = page.locator("table");
-    this.dateColumnSortBtn = page.getByRole("button", {
-      name: /sort by date/i,
-    });
-
-    this.modal = page.getByRole("dialog");
-    this.companyInput = page.getByPlaceholder("Company name");
-    this.jobTitleInput = page.getByPlaceholder(/software engineer/i);
-    this.salaryInput = page.getByPlaceholder("150000");
-    this.currencySelect = page.getByRole("combobox", { name: "Currency" });
-    this.stageSelect = this.modal.locator("select").nth(1);
-    this.dateInput = this.modal.locator('input[type="date"]');
-    this.notesTextarea = page.getByPlaceholder("Any context or links");
-    this.addBtn = page.getByRole("button", { name: "Add" });
-    this.saveBtn = page.getByRole("button", { name: "Save" });
-    this.cancelBtn = page.getByRole("button", { name: "Cancel" });
-  }
+  readonly modal = this.page.getByRole("dialog");
+  readonly companyInput = this.page.getByPlaceholder("Company name");
+  readonly jobTitleInput = this.page.getByPlaceholder(/software engineer/i);
+  readonly salaryInput = this.page.getByPlaceholder("150000");
+  readonly currencySelect = this.page.getByRole("combobox", { name: "Currency" });
+  readonly stageSelect = this.modal.locator("select").nth(1);
+  readonly dateInput = this.modal.locator('input[type="date"]');
+  readonly notesTextarea = this.page.getByPlaceholder("Any context or links");
+  readonly addBtn = this.page.getByRole("button", { name: "Add" });
+  readonly saveBtn = this.page.getByRole("button", { name: "Save" });
+  readonly cancelBtn = this.page.getByRole("button", { name: "Cancel" });
 
   async openAddModal() {
     await this.addApplicationBtn.click();
@@ -99,7 +72,9 @@ export class ApplicationsPage extends BasePage {
 
   /** Clicks the favourite star for the row matching `company`. */
   async toggleFavorite(company: string) {
-    await this.rowFor(company).getByRole("button", { name: /favorite/i }).click();
+    await this.rowFor(company)
+      .getByRole("button", { name: /favorite/i })
+      .click();
   }
 
   /** Clicks the edit (pencil) button for the row matching `company`. */

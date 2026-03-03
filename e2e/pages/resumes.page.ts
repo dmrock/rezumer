@@ -1,19 +1,11 @@
-import { type Page, type Locator } from "@playwright/test";
+import { type Locator } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ResumesPage extends BasePage {
-  readonly heading: Locator;
-  readonly addResumeBtn: Locator;
-  readonly emptyStateText: Locator;
-  readonly maxResumesWarning: Locator;
-
-  constructor(page: Page) {
-    super(page);
-    this.heading = page.getByRole("heading", { name: "Resumes", exact: true });
-    this.addResumeBtn = page.getByRole("button", { name: "Add Resume" });
-    this.emptyStateText = page.getByText("No resumes yet");
-    this.maxResumesWarning = page.getByText(/reached the maximum/i);
-  }
+  readonly heading = this.page.getByRole("heading", { name: "Resumes", exact: true });
+  readonly addResumeBtn = this.page.getByRole("button", { name: "Add Resume" });
+  readonly emptyStateText = this.page.getByText("No resumes yet");
+  readonly maxResumesWarning = this.page.getByText(/reached the maximum/i);
 
   /** Returns the resume card that contains the given title. */
   cardFor(title: string): Locator {
@@ -27,7 +19,9 @@ export class ResumesPage extends BasePage {
 
   /** Clicks the trash button on the card with the given title. */
   async clickDelete(title: string) {
-    await this.cardFor(title).getByRole("button", { name: /delete/i }).click();
+    await this.cardFor(title)
+      .getByRole("button", { name: /delete/i })
+      .click();
   }
 
   /** Confirms the delete dialog. */
