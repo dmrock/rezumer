@@ -4,7 +4,7 @@ import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Star } from "lucide-react";
 
@@ -15,10 +15,12 @@ export function Header() {
   // Stable id tying the toggle button to the collapsible mobile navigation panel (disclosure pattern)
   const mobilePanelId = "mobile-nav-panel";
 
-  // Close the mobile menu whenever the route changes
-  useEffect(() => {
+  // Close the mobile menu whenever the route changes (setState during render avoids extra render cycle)
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   const navItems = [
     { href: "/applications", label: "Applications" },

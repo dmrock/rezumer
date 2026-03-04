@@ -1,21 +1,13 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import nextConfig from "eslint-config-next/core-web-vitals";
+import prettier from "eslint-config-prettier";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+const config = [
+  ...nextConfig,
+  prettier,
   {
     ignores: [
       ".clerk/**",
       ".next/**",
-      // Ignore Playwright tests and artifacts
       "e2e/**",
       "playwright-report/**",
       "test-results/**",
@@ -26,7 +18,6 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
-  ...compat.extends("prettier"),
 ];
 
-export default eslintConfig;
+export default config;
